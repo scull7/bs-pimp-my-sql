@@ -30,15 +30,26 @@ in `bsconfig.json`:
 
 ## How do I use it?
 
-`// @TODO - add some examples`
+### Execute a raw SQL query.
+```reason
+let db =
+  Mysql.Connection.make(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-### Use it in your project
-
-`// @TODO - add some examples`
+Pimpmysql.raw(~db, ~sql="SELECT ? + ? AS result", ~params=[|5, 6|], ())
+|> Js.Promise.then_(res => {
+     Js.log(res);
+     Js.Promise.resolve(1);
+   })
+|> Mysql.Promise.Connection.end_(db)
+|> Js.Promise.catch(err => {
+     Js.log(err);
+     Mysql.Connection.end_(db);
+     Js.Promise.resolve(-1);
+   });
+```
 
 ### Run the examples
-
-`// @TODO - add some examples`
+* `yarn run examples:basic`
 
 ## What's missing?
 
