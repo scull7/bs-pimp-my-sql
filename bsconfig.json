@@ -1,5 +1,5 @@
 {
-  "name": "bs-mysql2",
+  "name": "bs-pimp-my-sql",
   "version": "0.1.0",
   "package-specs": {
     "module": "commonjs",
@@ -11,10 +11,16 @@
     {
       "dir": "examples",
       "type": "dev"
+    },
+    {
+      "dir": "__tests__",
+      "type": "dev"
     }
   ],
   "bs-dev-dependencies": [],
-  "bs-dependencies": [],
+  "bs-dependencies": [
+    "bs-mysql2"
+  ],
   "bsc-flags": [ "-bs-no-version-header", "-bs-super-errors" ],
   "refmt": 3
 }

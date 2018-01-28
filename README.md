@@ -9,10 +9,43 @@ This is a SQL wrapper that provides many convenience features and a "light" ORM 
 uses plain SQL as the underlying language.  Currently it is only compatible with the [bs-mysql2]
 client.
 
-## TODO
+## How do I install it?
+
+Inside of a BuckleScript project:
+```shell
+yarn add bs-mysql2 bs-pimp-my-sql
+```
+
+Then add `bs-mysql2` and `bs-pimp-my-sql` to your `bs-dependencies`
+in `bsconfig.json`:
+
+```json
+{
+  "bs-dependencies": [
+    "bs-mysql2",
+    "bs-pimp-my-sql"
+  ]
+}
+```
+
+## How do I use it?
+
+`// @TODO - add some examples`
+
+### Use it in your project
+
+`// @TODO - add some examples`
+
+### Run the examples
+
+`// @TODO - add some examples`
+
+## What's missing?
+
+Everything not checked...
 
 - [ ] Query Interface
-  - [ ] _(raw)_ Raw SQL query
+  - [x] _(raw)_ Raw SQL query
   - [ ] _(rawInsert)_ Raw SQL insert
   - [ ] _(rawUpdate)_ Raw SQL update
   - [ ] INSERT
@@ -70,41 +103,6 @@ client.
   - [ ] TIMESTAMP conversion
   - [ ] `ObjectHash` interface interpolation
   - [ ] Caching
-
-## How do I install it?
-
-Inside of a BuckleScript project:
-```shell
-yarn add bs-mysql2 bs-pimp-my-sql
-```
-
-Then add `bs-mysql2` and `bs-pimp-my-sql` to your `bs-dependencies`
-in `bsconfig.json`:
-
-```json
-{
-  "bs-dependencies": [
-    "bs-mysql2",
-    "bs-pimp-my-sql"
-  ]
-}
-```
-
-## How do I use it?
-
-`// @TODO - add some examples`
-
-### Use it in your project
-
-`// @TODO - add some examples`
-
-### Run the examples
-
-`// @TODO - add some examples`
-
-## What's missing?
-
-Mostly everything...
 
 [pimp-my-sql]: https://github.com/influentialpublishers/pimp-my-sql
 [bs-mysql]: https://github.com/davidgomes/bs-mysql
