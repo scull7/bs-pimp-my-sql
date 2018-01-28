@@ -1,4 +1,4 @@
-](https://img.shields.io/badge/status-alpha-red.svg)
+![Project Status](https://img.shields.io/badge/status-alpha-red.svg)
 
 # bs-pimp-my-sql
 ReasonML implementation of the [pimp-my-sql] wrapper.
