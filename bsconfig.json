@@ -19,7 +19,9 @@
   ],
   "bs-dev-dependencies": [],
   "bs-dependencies": [
-    "bs-mysql2"
+    "bs-chalk",
+    "bs-mysql2",
+    "bs-node-debug"
   ],
   "bsc-flags": [ "-bs-no-version-header", "-bs-super-errors" ],
   "refmt": 3
