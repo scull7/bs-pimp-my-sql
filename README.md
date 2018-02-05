@@ -1,4 +1,6 @@
-![Project Status](https://img.shields.io/badge/status-alpha-red.svg)
+[![NPM](https://nodei.co/npm/bs-pimp-my-sql.png)](https://nodei.co/npm/bs-pimp-my-sql/)
+[![Build Status](https://www.travis-ci.org/scull7/bs-pimp-my-sql.svg?branch=master)](https://www.travis-ci.org/scull7/bs-pimp-my-sql)
+[![Coverage Status](https://coveralls.io/repos/github/scull7/bs-pimp-my-sql/badge.svg?branch=master)](https://coveralls.io/github/scull7/bs-pimp-my-sql?branch=master)
 
 # bs-pimp-my-sql
 ReasonML implementation of the [pimp-my-sql] wrapper.
