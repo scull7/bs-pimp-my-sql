@@ -9,16 +9,35 @@ type result = {search: string};
 
 type add_result = {result: int};
 
+type db_result = {database: string};
+
+let extractRows = results =>
+  switch results {
+  | PimpMySql.Promise.Mutation(_) => failwith("unexpected_mutation_result")
+  | PimpMySql.Promise.Select(s) => s.rows
+  };
+
+describe("Test Raw Query", () => {
+  let db = connect();
+  let decode_databases = json => {
+    database: json |> Json.Decode.field("Database", Json.Decode.string)
+  };
+  testPromise("No interpolation", () =>
+    PimpMySql.raw(~db, ~sql="SHOW DATABASES", ())
+    >>= extractRows
+    >>= Js.Array.map(decode_databases)
+    >>= Js.Array.map(x => x.database)
+    >>= Expect.expect
+    >>= Expect.toBeSupersetOf([|"test"|])
+  );
+  afterAll(() => MySql.Connection.close(db));
+});
+
 describe("Test Basic Query Interpolation", () => {
   let db = connect();
   let decoder = json => {
     search: json |> Json.Decode.field("search", Json.Decode.string)
   };
-  let extractRows = results =>
-    switch results {
-    | PimpMySql.Promise.Mutation(_) => failwith("unexpected_mutation_result")
-    | PimpMySql.Promise.Select(s) => s.rows
-    };
   let add_decoder = json => {
     result: json |> Json.Decode.field("result", Json.Decode.int)
   };
@@ -38,4 +57,5 @@ describe("Test Basic Query Interpolation", () => {
     >>= Expect.expect
     >>= Expect.toBeSupersetOf([|12|])
   );
+  afterAll(() => MySql.Connection.close(db));
 });
