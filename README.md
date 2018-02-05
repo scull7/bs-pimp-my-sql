@@ -32,24 +32,35 @@ in `bsconfig.json`:
 
 ### Execute a raw SQL query.
 ```reason
+open Util.Operators;
+
 let db =
   Mysql.Connection.make(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-Pimpmysql.raw(~db, ~sql="SELECT ? + ? AS result", ~params=[|5, 6|], ())
-|> Js.Promise.then_(res => {
-     Js.log(res);
-     Js.Promise.resolve(1);
-   })
-|> Mysql.Promise.Connection.end_(db)
-|> Js.Promise.catch(err => {
-     Js.log(err);
-     Mysql.Connection.end_(db);
-     Js.Promise.resolve(-1);
-   });
-```
+let extractRows = response =>
+  switch response {
+  | PimpMySql.Promise.Mutation(_) => failwith("unexpected_mutation_result")
+  | PimpMySql.Promise.Select(s) => s.rows
+};
 
-### Run the examples
-* `yarn run examples:basic`
+let decoder_search = json => {
+  search: json |> Json.Decode.field("search", Json.Decode.string)
+};
+
+PimpMySql.raw(~db, ~sql="SELECT ? AS search", ~params=[|"%ssearch"|], ())
+>>= extractRows
+>>= Js.Array.map(decoder_search)
+>>= Js.log
+
+let decoder_result = json => {
+  result: json |> Json.Decode.field("result", Json.Decode.int)
+};
+
+PimpMySql.raw(~db, ~sql="SELECT 1 + ? + ? AS result", ~params=[|5, 6|], ())
+>>= extractRows
+>>= Js.Array.map(decoder_result)
+>>= Js.log
+```
 
 ## What's missing?
 
