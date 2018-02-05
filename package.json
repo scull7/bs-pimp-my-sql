@@ -6,7 +6,10 @@
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
     "clean": "bsb -clean-world",
-    "examples:basic": "node examples/basic.bs.js"
+    "coverage": "nyc report --temp-directory=coverage --reporter=text-lcov | coveralls",
+    "examples:basic": "node examples/basic.bs.js",
+    "test": "yarn run clean; yarn run build; jest --coverage && yarn run coverage",
+    "watch:jest": "jest --coverage --watchAll"
   },
   "keywords": [
     "BuckleScript",
@@ -24,8 +27,15 @@
   "license": "MIT",
   "dependencies": {
     "bs-chalk": "^0.2.1",
-    "bs-mysql2": "^0.3.3",
+    "bs-json": "^1.0.1",
     "bs-node-debug": "^0.2.0",
-    "bs-platform": "^2.1.0"
+    "bs-platform": "^2.1.0",
+    "bs-sql-common": "^0.2.0"
+  },
+  "devDependencies": {
+    "@glennsl/bs-jest": "^0.3.3",
+    "bs-mysql2": "^0.6.0",
+    "coveralls": "^3.0.0",
+    "nyc": "^11.4.1"
   }
 }

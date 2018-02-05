@@ -9,19 +9,19 @@
   "sources": [
     "src",
     {
-      "dir": "examples",
-      "type": "dev"
-    },
-    {
       "dir": "__tests__",
       "type": "dev"
     }
   ],
-  "bs-dev-dependencies": [],
+  "bs-dev-dependencies": [
+    "@glennsl/bs-jest",
+    "bs-mysql2"
+  ],
   "bs-dependencies": [
     "bs-chalk",
-    "bs-mysql2",
-    "bs-node-debug"
+    "bs-json",
+    "bs-node-debug",
+    "bs-sql-common"
   ],
   "bsc-flags": [ "-bs-no-version-header", "-bs-super-errors" ],
   "refmt": 3
