@@ -25,3 +25,7 @@ lib/*
 .merlin
 .bsb.lock
 node_modules/
+coverage
+src/**/*.js
+__tests__/**/*.js
+
