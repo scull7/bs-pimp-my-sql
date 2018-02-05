@@ -20,3 +20,6 @@ let raw = (~db, ~sql, ~params=?, _) =>
        | None => Promise.raw(conn, sql)
        }
      );
+/*
+   @TODO - write a function that allows the user to specify a row decoder.
+ */
