@@ -1,5 +1,29 @@
+/* Private */
 module Sql = SqlCommon.Make_sql(MySql2);
 
+module Decode = {
+  let date = (json: Js.Json.t) : Js.Date.t =>
+    switch (Js.typeof(json)) {
+    | "object" => (Obj.magic(json): Js.Date.t)
+    | "string" => Js.Date.fromString(Obj.magic(json): string)
+    | x => failwith({j|Invalid Date: $x|j})
+    };
+  let timestamp = json => date(json) |> Js.Date.getTime |> int_of_float;
+  let oneRow = (decoder, (rows, _)) =>
+    switch (Belt_Array.length(rows)) {
+    | 1 => Some(decoder(rows[0]))
+    | 0 => None
+    | _ => failwith("unexpected_result_count")
+    };
+  let rows = (decoder, (rows, _)) => Belt_Array.map(rows, decoder);
+};
+
+module Params = {
+  let named = json => Some(`Named(json));
+  let positional = json => Some(`Positional(json));
+};
+
+/* Public */
 let getById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
@@ -8,7 +32,7 @@ let getById = (baseQuery, table, decoder, id, conn) => {
   let params = Some(`Positional(Json.Encode.([|int(id)|] |> jsonArray)));
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Util.Decode.oneRow(decoder, result) |> Js.Promise.resolve
+       Decode.oneRow(decoder, result) |> Js.Promise.resolve
      );
 };
 
@@ -18,32 +42,31 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
     SqlComposer.Select.(
       baseQuery |> where({j| AND $table.`id` IN ? |j}) |> to_sql
     );
-  let params = Json.Encode.(idList |> list(int)) |> Util.Params.positional;
+  let params = Json.Encode.(idList |> list(int)) |> Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Util.Decode.rows(decoder, result) |> Js.Promise.resolve
+       Decode.rows(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let getOneBy = (decoder, sql, params, conn) => {
-  let params = Util.Params.positional(params);
+  let params = Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Util.Decode.oneRow(decoder, result) |> Js.Promise.resolve
+       Decode.oneRow(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let get = (decoder, sql, params, conn) => {
-  let params = Util.Params.positional(params);
+  let params = Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Util.Decode.rows(decoder, result) |> Js.Promise.resolve
+       Decode.rows(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let insert = (baseQuery, table, decoder, encoder, record, conn) => {
-  let params =
-    [|record|] |> Json.Encode.array(encoder) |> Util.Params.positional;
+  let params = [|record|] |> Json.Encode.array(encoder) |> Params.positional;
   let sql = {j|INSERT INTO $table SET ?|j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((_, id)) =>
