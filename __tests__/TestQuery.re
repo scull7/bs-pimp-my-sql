@@ -2,6 +2,10 @@ open Jest;
 
 module Sql = SqlCommon.Make_sql(MySql2);
 
+type animal = {type_: string};
+
+external toJson : Js.Json.t => Js.Json.t = "%identity";
+
 let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqltest";
@@ -165,6 +169,30 @@ describe("Query", () => {
          )
          |> Js.Promise.resolve
        );
+  });
+  testPromise("insert (returns 1 result)", () => {
+    let decoder = json => json;
+    let record = [%raw "{\"type\": \"pangolin\"}"];
+    Query.insert(base, table, decoder, toJson, record, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => pass
+           | None => fail("expected to get 1 result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insert (fails and throws error)", () => {
+    let decoder = json => json;
+    let record = [%raw "{\"type\": \"elephant\"}"];
+    Query.insert(base, table, decoder, toJson, record, conn)
+    |> Js.Promise.then_((_) =>
+         fail("expected to throw unique constraint error")
+         |> Js.Promise.resolve
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
