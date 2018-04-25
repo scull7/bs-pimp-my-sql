@@ -24,6 +24,7 @@ module Params = {
 };
 
 /* Public */
+/* @TODO - make getByIdList batch large lists appropriately. */
 let getById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
@@ -36,7 +37,6 @@ let getById = (baseQuery, table, decoder, id, conn) => {
      );
 };
 
-/*[>[> @TODO - make this batch large lists appropriately. <]<]*/
 let getByIdList = (baseQuery, table, decoder, idList, conn) => {
   let sql =
     SqlComposer.Select.(
