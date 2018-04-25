@@ -14,7 +14,8 @@
     }
   ],
   "bs-dev-dependencies": [
-    "@glennsl/bs-jest"
+    "@glennsl/bs-jest",
+    "bs-mysql2"
   ],
   "bs-dependencies": [
     "@glennsl/bs-json",
@@ -22,6 +23,6 @@
     "bs-sql-common",
     "bs-sql-composer"
   ],
-  "bsc-flags": [ "-bs-no-version-header", "-bs-super-errors" ],
+  "bsc-flags": [ "-bs-super-errors", "-bs-sort-imports" ],
   "refmt": 3
 }
