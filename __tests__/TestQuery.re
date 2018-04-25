@@ -40,14 +40,14 @@ let createTestData = conn => {
 createTestData(conn);
 
 describe("Query", () => {
-  testPromise("getById (returns a result)", () => {
+  testPromise("getById (returns 1 result)", () => {
     let decoder = json => json;
     Query.getById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
            | Some(_) => pass
-           | None => fail("expected to get something back")
+           | None => fail("expected to get 1 result")
            }
          )
          |> Js.Promise.resolve
@@ -94,7 +94,7 @@ describe("Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("getOneBy (returns a result)", () => {
+  testPromise("getOneBy (returns 1 result)", () => {
     let decoder = json => json;
     let sql =
       SqlComposer.Select.(
@@ -125,6 +125,42 @@ describe("Query", () => {
            switch (res) {
            | Some(_) => fail("expected to get nothing back")
            | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("get (returns 1 result)", () => {
+    let decoder = json => json;
+    let sql =
+      SqlComposer.Select.(
+        base |> where({j|AND $table.`type` = ?|j}) |> to_sql
+      );
+    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+    Query.get(decoder, sql, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (Array.length @@ res) {
+           | 1 => pass
+           | _ => fail("expected to get 1 result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("get (does not return anything)", () => {
+    let decoder = json => json;
+    let sql =
+      SqlComposer.Select.(
+        base |> where({j|AND $table.`type` = ?|j}) |> to_sql
+      );
+    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
+    Query.get(decoder, sql, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (Array.length @@ res) {
+           | 0 => pass
+           | _ => fail("expected to get nothing back")
            }
          )
          |> Js.Promise.resolve
