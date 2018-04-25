@@ -28,11 +28,7 @@ let seedTable = {j|
   VALUES ('dog'), ('cat'), ('elephant');
 |j};
 
-let base = {
-  ...SqlComposer.Select.select,
-  fields: ["*"],
-  from: [{j|FROM $table|j}],
-};
+let base = SqlComposer.Select.(select |> field("*") |> from(table));
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, (_) => ());
