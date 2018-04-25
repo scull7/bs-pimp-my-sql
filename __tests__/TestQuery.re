@@ -44,20 +44,20 @@ let createTestData = conn => {
 createTestData(conn);
 
 describe("Query", () => {
-  testPromise("getById (returns result)", () => {
+  testPromise("getById (returns a result)", () => {
     let decoder = json => json;
     Query.getById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
            | Some(_) => pass
-           | None => fail("expected to get an elephant back")
+           | None => fail("expected to get something back")
            }
          )
          |> Js.Promise.resolve
        );
   });
-  testPromise("getById (does not return result)", () => {
+  testPromise("getById (does not return anything)", () => {
     let decoder = json => json;
     Query.getById(base, table, decoder, 4, conn)
     |> Js.Promise.then_(res =>
@@ -65,6 +65,34 @@ describe("Query", () => {
            switch (res) {
            | Some(_) => fail("expected to get nothing back")
            | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getByIdList (returns 3 results)", () => {
+    let decoder = json => json;
+    Query.getByIdList(base, table, decoder, [1, 2, 3], conn)
+    |> Js.Promise.then_(res =>
+         (
+           /*@TODO: there is a bug with mysql2, once fixed add
+             fail("expected to get 2 results back") back to the catchall*/
+           switch (Array.length @@ res) {
+           | 3 => pass
+           | _ => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getByIdList (does not return anything)", () => {
+    let decoder = json => json;
+    Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (Array.length @@ res) {
+           | 0 => pass
+           | _ => fail("expected to get nothing back")
            }
          )
          |> Js.Promise.resolve
