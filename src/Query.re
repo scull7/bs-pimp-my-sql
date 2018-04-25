@@ -13,6 +13,7 @@ module Decode = {
 
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */
+/* @TODO - there is a bug with mysql2, getByIdList will not work until fixed*/
 let getById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
@@ -28,7 +29,7 @@ let getById = (baseQuery, table, decoder, id, conn) => {
 let getByIdList = (baseQuery, table, decoder, idList, conn) => {
   let sql =
     SqlComposer.Select.(
-      baseQuery |> where({j| AND $table.`id` IN ? |j}) |> to_sql
+      baseQuery |> where({j| AND $table.`id` IN (?) |j}) |> to_sql
     );
   let params = Json.Encode.(idList |> list(int)) |> Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
