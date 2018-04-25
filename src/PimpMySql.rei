@@ -1,1 +1,3 @@
-module Model = Model;
+module Query = Query;
+
+module Params = Params;
