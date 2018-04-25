@@ -98,6 +98,42 @@ describe("Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("getOneBy (returns a result)", () => {
+    let decoder = json => json;
+    let sql =
+      SqlComposer.Select.(
+        base |> where({j|AND $table.`type` = ?|j}) |> to_sql
+      );
+    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+    Query.getOneBy(decoder, sql, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => pass
+           | None => fail("expected to get something back")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getOneBy (does not return anything)", () => {
+    let decoder = json => json;
+    let sql =
+      SqlComposer.Select.(
+        base |> where({j|AND $table.`type` = ?|j}) |> to_sql
+      );
+    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
+    Query.getOneBy(decoder, sql, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => fail("expected to get nothing back")
+           | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
