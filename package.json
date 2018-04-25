@@ -25,17 +25,19 @@
   "repository": "git@github.com:scull7/bs-pimp-my-sql.git",
   "author": "Nathan Sculli <scull7@gmail.com>",
   "license": "MIT",
+  "peerDependencies": {
+    "bs-platform": "^2.2.3"
+  },
   "dependencies": {
-    "bs-chalk": "^0.2.1",
-    "bs-json": "^1.0.1",
-    "bs-node-debug": "^0.2.0",
-    "bs-platform": "^2.1.0",
-    "bs-sql-common": "^0.2.0"
+    "@glennsl/bs-json": "^1.2.0",
+    "bs-mysql2": "^3.1.0",
+    "bs-sql-common": "^1.0.1",
+    "bs-sql-composer": "^1.0.0"
   },
   "devDependencies": {
     "@glennsl/bs-jest": "^0.3.3",
-    "bs-mysql2": "^0.6.0",
     "coveralls": "^3.0.0",
+    "jest-cli": "^22.4.3",
     "nyc": "^11.4.1"
   }
 }

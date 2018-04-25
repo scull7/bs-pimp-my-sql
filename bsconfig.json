@@ -14,14 +14,13 @@
     }
   ],
   "bs-dev-dependencies": [
-    "@glennsl/bs-jest",
-    "bs-mysql2"
+    "@glennsl/bs-jest"
   ],
   "bs-dependencies": [
-    "bs-chalk",
-    "bs-json",
-    "bs-node-debug",
-    "bs-sql-common"
+    "@glennsl/bs-json",
+    "bs-mysql2",
+    "bs-sql-common",
+    "bs-sql-composer"
   ],
   "bsc-flags": [ "-bs-no-version-header", "-bs-super-errors" ],
   "refmt": 3
