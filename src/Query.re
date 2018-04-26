@@ -2,13 +2,6 @@
 module Sql = SqlCommon.Make_sql(MySql2);
 
 module Decode = {
-  let date = (json: Js.Json.t) : Js.Date.t =>
-    switch (Js.typeof(json)) {
-    | "object" => (Obj.magic(json): Js.Date.t)
-    | "string" => Js.Date.fromString(Obj.magic(json): string)
-    | x => failwith({j|Invalid Date: $x|j})
-    };
-  let timestamp = json => date(json) |> Js.Date.getTime |> int_of_float;
   let oneRow = (decoder, (rows, _)) =>
     switch (Belt_Array.length(rows)) {
     | 1 => Some(decoder(rows[0]))
@@ -18,13 +11,9 @@ module Decode = {
   let rows = (decoder, (rows, _)) => Belt_Array.map(rows, decoder);
 };
 
-module Params = {
-  let named = json => Some(`Named(json));
-  let positional = json => Some(`Positional(json));
-};
-
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */
+/* @TODO - there is a bug with mysql2, getByIdList will not work until fixed*/
 let getById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
@@ -40,7 +29,7 @@ let getById = (baseQuery, table, decoder, id, conn) => {
 let getByIdList = (baseQuery, table, decoder, idList, conn) => {
   let sql =
     SqlComposer.Select.(
-      baseQuery |> where({j| AND $table.`id` IN ? |j}) |> to_sql
+      baseQuery |> where({j| AND $table.`id` IN (?) |j}) |> to_sql
     );
   let params = Json.Encode.(idList |> list(int)) |> Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
@@ -88,8 +77,10 @@ let insertBatch =
     )
     |> Js.Promise.then_((_) => loader(rows))
     |> Js.Promise.then_(result => `Ok(result) |> Js.Promise.resolve)
-    |> Js.Promise.catch(e => {
-         Js.log2({j|ERROR: $name - |j}, e);
-         `Error(error("batch_insert_failed")) |> Js.Promise.resolve;
-       })
+    |> Js.Promise.catch(e =>
+         {j|ERROR: $name - $e|j}
+         |> error
+         |> (x => `Error(x))
+         |> Js.Promise.resolve
+       )
   };

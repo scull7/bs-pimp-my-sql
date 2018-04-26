@@ -36,7 +36,7 @@
     "bs-sql-composer": "^1.0.0"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.3.3",
+    "@glennsl/bs-jest": "^0.4.2",
     "coveralls": "^3.0.0",
     "jest-cli": "^22.4.3",
     "nyc": "^11.4.1"
