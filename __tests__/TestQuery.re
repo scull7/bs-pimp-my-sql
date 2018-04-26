@@ -77,7 +77,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
-             fail("expected to get 2 results back") back to the catchall*/
+             fail("expected to get 3 results back") back to the catchall*/
            switch (Array.length @@ res) {
            | 3 => pass
            | _ => pass
@@ -232,6 +232,27 @@ describe("Query", () => {
            switch (res) {
            | `Error(_) => pass
            | `Ok(_) => fail("expected to throw unique constraint error")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("insertBatch (given empty array returns nothing)", () =>
+    Query.insertBatch(
+      ~name="insertBatch test",
+      ~table,
+      ~encoder=animalToJson,
+      ~loader=animals => Js.Promise.resolve(animals),
+      ~error=msg => msg,
+      ~columns=[|"type_"|],
+      ~rows=[||],
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | `Ok([||]) => pass
+           | _ => fail("expected to get back nothing")
            }
          )
          |> Js.Promise.resolve
