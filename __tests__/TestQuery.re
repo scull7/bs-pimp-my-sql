@@ -43,6 +43,7 @@ let createTestData = conn => {
 
 createTestData(conn);
 
+/* @TODO - improve tests by checking the actual content of the results */
 describe("Query", () => {
   testPromise("getById (returns 1 result)", () => {
     let decoder = json => json;
@@ -226,16 +227,15 @@ describe("Query", () => {
       ~rows=[|{type_: "dog"}, {type_: "cat"}|],
       conn,
     )
-    |> Js.Promise.then_(res => {
-         Js.log(res);
+    |> Js.Promise.then_(res =>
          (
            switch (res) {
            | `Error(_) => pass
            | `Ok(_) => fail("expected to throw unique constraint error")
            }
          )
-         |> Js.Promise.resolve;
-       })
+         |> Js.Promise.resolve
+       )
   );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
