@@ -77,8 +77,10 @@ let insertBatch =
     )
     |> Js.Promise.then_((_) => loader(rows))
     |> Js.Promise.then_(result => `Ok(result) |> Js.Promise.resolve)
-    |> Js.Promise.catch(e => {
-         Js.log2({j|ERROR: $name - |j}, e);
-         `Error(error("batch_insert_failed")) |> Js.Promise.resolve;
-       })
+    |> Js.Promise.catch(e =>
+         {j|ERROR: $name - $e|j}
+         |> error
+         |> (x => `Error(x))
+         |> Js.Promise.resolve
+       )
   };
