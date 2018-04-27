@@ -471,11 +471,20 @@ describe("FactorySql", () => {
     output == expected ? pass : fail("not expected output");
   });
   test("make (only select)", () => {
-    let base = SqlComposer.Select.field("*");
-    let user = (_) => SqlComposer.Select.select;
+    let base = SqlComposer.Select.field("animal.id");
+    let user = SqlComposer.Select.field("animal.type");
     let output = FactorySql.make(table, base, user);
     let expected =
-      String.concat("\n", ["SELECT", "  *", "FROM `animal`", "WHERE 1=1"]);
+      String.concat(
+        "\n",
+        [
+          "SELECT",
+          "  animal.id",
+          "  ,   animal.type",
+          "FROM `animal`",
+          "WHERE 1=1",
+        ],
+      );
     output == expected ? pass : fail("not expected output");
   });
 });
