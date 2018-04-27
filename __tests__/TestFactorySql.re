@@ -450,4 +450,44 @@ describe("FactorySql", () => {
       );
     output == expected ? pass : fail("not expected output");
   });
+  test("make (no user limit clause)", () => {
+    let base =
+      SqlComposer.Select.(
+        select
+        |> field("animal.id")
+        |> join("JOIN blah ON blah.id = animal.blah_id")
+        |> where("AND animal.deleted IS NULL")
+        |> order_by(`Asc("animal.id"))
+        |> group_by("animal.id")
+        |> limit(~offset="0", ~row_count=Some(1))
+      );
+    let user =
+      SqlComposer.Select.(
+        select
+        |> modifier(`Distinct)
+        |> field("foo.id")
+        |> join("JOIN foo ON foo.id = blah.foo_id")
+      );
+    let output = FactorySql.make(table, base, user);
+    let expected =
+      String.concat(
+        "\n",
+        [
+          "SELECT DISTINCT",
+          "  animal.id",
+          "  ,   foo.id",
+          "FROM `animal`",
+          "JOIN blah ON blah.id = animal.blah_id",
+          "JOIN foo ON foo.id = blah.foo_id",
+          "WHERE 1=1",
+          "AND animal.deleted IS NULL",
+          "ORDER BY",
+          "  animal.id ASC",
+          "GROUP BY",
+          "  animal.id",
+          "LIMIT 1 OFFSET 0",
+        ],
+      );
+    output == expected ? pass : fail("not expected output");
+  });
 });
