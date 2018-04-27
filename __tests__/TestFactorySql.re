@@ -54,7 +54,7 @@ describe("FactorySql", () => {
       );
     output == expected ? pass : fail("not expected output");
   });
-  test("make (base modifier)", () => {
+  test("make (with base modifier)", () => {
     let base =
       SqlComposer.Select.(
         select
@@ -102,7 +102,7 @@ describe("FactorySql", () => {
       );
     output == expected ? pass : fail("not expected output");
   });
-  test("make (user modifier)", () => {
+  test("make (with user modifier)", () => {
     let base =
       SqlComposer.Select.(
         select
