@@ -7,7 +7,7 @@ external animalToJson : animal => Js.Json.t = "%identity";
 let table = "animal";
 
 describe("FactorySql", () => {
-  test("make (user modifier)", () => {
+  test("make (merging all clauses from base and user)", () => {
     let base =
       SqlComposer.Select.(
         select
@@ -21,7 +21,6 @@ describe("FactorySql", () => {
     let user =
       SqlComposer.Select.(
         select
-        |> modifier(`Distinct)
         |> field("foo.id")
         |> join("JOIN foo ON foo.id = blah.foo_id")
         |> where("AND foo.deleted IS NULL")
@@ -34,7 +33,7 @@ describe("FactorySql", () => {
       String.concat(
         "\n",
         [
-          "SELECT DISTINCT",
+          "SELECT",
           "  test.id",
           "  ,   foo.id",
           "FROM `animal`",
@@ -103,7 +102,7 @@ describe("FactorySql", () => {
       );
     output == expected ? pass : fail("not expected output");
   });
-  test("make (merging all clauses from base and user)", () => {
+  test("make (user modifier)", () => {
     let base =
       SqlComposer.Select.(
         select
@@ -117,6 +116,7 @@ describe("FactorySql", () => {
     let user =
       SqlComposer.Select.(
         select
+        |> modifier(`Distinct)
         |> field("foo.id")
         |> join("JOIN foo ON foo.id = blah.foo_id")
         |> where("AND foo.deleted IS NULL")
@@ -129,7 +129,7 @@ describe("FactorySql", () => {
       String.concat(
         "\n",
         [
-          "SELECT",
+          "SELECT DISTINCT",
           "  test.id",
           "  ,   foo.id",
           "FROM `animal`",
