@@ -1,17 +1,17 @@
 /* Private */
+let removeLastItemInList = list =>
+  switch (List.tl @@ list) {
+  | exception _ => []
+  | result => result
+  };
+
 let mergeGroupBy = (base, userClauses) =>
   SqlComposer.Select.(
-    if (List.length(userClauses) == 0) {
-      base.group_by;
-    } else if (List.length(base.group_by) == 0) {
-      userClauses;
-    } else {
-      userClauses
-      |> List.rev
-      |> List.tl
-      |> List.fold_left((acc, x) => group_by(x, acc), base)
-      |> (x => x.group_by);
-    }
+    userClauses
+    |> List.rev
+    |> removeLastItemInList
+    |> List.fold_left((acc, x) => group_by(x, acc), base)
+    |> (x => x.group_by)
   );
 
 let mergeOrderBy = (baseClauses, userClauses) =>
@@ -22,7 +22,7 @@ let mergeOrderBy = (baseClauses, userClauses) =>
   } else {
     userClauses
     |> List.rev
-    |> List.tl
+    |> removeLastItemInList
     |> (x => List.concat([x, [","], baseClauses]));
   };
 
@@ -30,7 +30,7 @@ let mergeWhere = (base, userClauses) =>
   SqlComposer.Select.(
     userClauses
     |> List.rev
-    |> List.tl
+    |> removeLastItemInList
     |> List.fold_left((acc, x) => where(x, acc), base)
     |> (x => x.where)
   );
