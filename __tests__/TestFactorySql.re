@@ -349,7 +349,7 @@ describe("FactorySql", () => {
           "ORDER BY",
           "  animal.id ASC",
           "GROUP BY",
-          "  foo.id",
+          "    foo.id",
           "LIMIT 1 OFFSET 0",
         ],
       );
@@ -468,6 +468,14 @@ describe("FactorySql", () => {
           "LIMIT 1 OFFSET 0",
         ],
       );
+    output == expected ? pass : fail("not expected output");
+  });
+  test("make (only select)", () => {
+    let base = SqlComposer.Select.field("*");
+    let user = (_) => SqlComposer.Select.select;
+    let output = FactorySql.make(table, base, user);
+    let expected =
+      String.concat("\n", ["SELECT", "  *", "FROM `animal`", "WHERE 1=1"]);
     output == expected ? pass : fail("not expected output");
   });
 });
