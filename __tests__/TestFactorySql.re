@@ -28,7 +28,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -74,7 +75,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -120,7 +122,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -165,7 +168,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -209,7 +213,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -252,7 +257,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -293,7 +299,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -333,7 +340,8 @@ describe("FactorySql", () => {
         >> group_by("foo.id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -372,7 +380,8 @@ describe("FactorySql", () => {
         >> join("JOIN foo ON foo.id = blah.foo_id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -410,7 +419,8 @@ describe("FactorySql", () => {
         >> join("JOIN foo ON foo.id = blah.foo_id")
         >> limit(~offset="5", ~row_count=Some(1))
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -448,7 +458,8 @@ describe("FactorySql", () => {
         >> field("foo.id")
         >> join("JOIN foo ON foo.id = blah.foo_id")
       );
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -473,7 +484,8 @@ describe("FactorySql", () => {
   test("make (only select)", () => {
     let base = SqlComposer.Select.field("animal.id");
     let user = SqlComposer.Select.field("animal.type");
-    let output = FactorySql.make(table, base, user);
+    let output =
+      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",

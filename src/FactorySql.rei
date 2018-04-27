@@ -2,4 +2,4 @@ let make: (
   string,
   SqlComposer.Select.t => SqlComposer.Select.t,
   SqlComposer.Select.t => SqlComposer.Select.t,
-) => (string);
+) => SqlComposer.Select.t;

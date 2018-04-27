@@ -41,19 +41,16 @@ let mergeFields = (base, userClauses) =>
   |> (x => x.fields);
 
 let factory = (table, base, user) =>
-  SqlComposer.Select.(
-    {
-      modifier: base.modifier != None ? base.modifier : user.modifier,
-      fields: mergeFields(base, user.fields),
-      from: [{j|FROM `$table`|j}],
-      join: List.concat([user.join, base.join]),
-      where: mergeWhere(base, user.where),
-      order_by: mergeOrderBy(base.order_by, user.order_by),
-      group_by: mergeGroupBy(base, user.group_by),
-      limit: List.length(base.limit) > 0 ? base.limit : user.limit,
-    }
-    |> to_sql
-  );
+  SqlComposer.Select.{
+    modifier: base.modifier != None ? base.modifier : user.modifier,
+    fields: mergeFields(base, user.fields),
+    from: [{j|FROM `$table`|j}],
+    join: List.concat([user.join, base.join]),
+    where: mergeWhere(base, user.where),
+    order_by: mergeOrderBy(base.order_by, user.order_by),
+    group_by: mergeGroupBy(base, user.group_by),
+    limit: List.length(base.limit) > 0 ? base.limit : user.limit,
+  };
 
 /* Public */
 /* @TODO - the base and user functions don't necessarily need to user
