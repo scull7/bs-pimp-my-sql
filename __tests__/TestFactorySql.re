@@ -1,9 +1,5 @@
 open Jest;
 
-type animal = {type_: string};
-
-external animalToJson : animal => Js.Json.t = "%identity";
-
 let table = "animal";
 
 let (>>): ('a => 'b, 'b => 'c, 'a) => 'c = (f, g, x) => g(f(x));
