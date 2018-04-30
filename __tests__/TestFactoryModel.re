@@ -89,7 +89,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getById (returns a result)", () =>
+  testPromise("getByIdList (returns a result)", () =>
     Base.getByIdList(decoder, [1, 2], conn)
     |> Js.Promise.then_(res => {
          Js.log(res);
@@ -104,7 +104,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve;
        })
   );
-  testPromise("getById (does not return any results)", () =>
+  testPromise("getByIdList (does not return any results)", () =>
     Base.getByIdList(decoder, [4, 5], conn)
     |> Js.Promise.then_(res => {
          Js.log(res);
