@@ -18,4 +18,11 @@ module Generator = (Config: Config) => {
       idList,
       conn,
     );
+  let getOneBy = (user, decoder, params, conn) =>
+    Query.getOneBy(
+      decoder,
+      SqlComposer.Select.to_sql(sqlFactory(user)),
+      params,
+      conn,
+    );
 };
