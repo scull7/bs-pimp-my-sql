@@ -10,4 +10,12 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
+  let getByIdList = (decoder, idList, conn) =>
+    Query.getByIdList(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      decoder,
+      idList,
+      conn,
+    );
 };
