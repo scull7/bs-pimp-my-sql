@@ -9,4 +9,9 @@ module Generator: (Config: Config) => {
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(option('a));
+  let getByIdList: (
+    Js.Json.t => 'a,
+    list(int),
+    SqlCommon.Make_sql(MySql2).connection
+  ) => Js.Promise.t(array('a));
 };
