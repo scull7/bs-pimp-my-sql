@@ -57,9 +57,4 @@ let factory = (table, base, user) =>
    the SqlComposer.Select.select type defined locally, figure out
    how to change this so that we will always know exactly what goes
    into the base and user function.*/
-let make = (table, base, user) =>
-  factory(
-    table,
-    base(SqlComposer.Select.select),
-    user(SqlComposer.Select.select),
-  );
+let make = (table, base, user) => factory(table, base, user);
