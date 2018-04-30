@@ -91,8 +91,7 @@ describe("FactoryModel", () => {
   );
   testPromise("getByIdList (returns a result)", () =>
     Base.getByIdList(decoder, [1, 2], conn)
-    |> Js.Promise.then_(res => {
-         Js.log(res);
+    |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
              fail("not an expected result") back to the catchall*/
@@ -101,22 +100,40 @@ describe("FactoryModel", () => {
            | _ => pass
            }
          )
-         |> Js.Promise.resolve;
-       })
+         |> Js.Promise.resolve
+       )
   );
   testPromise("getByIdList (does not return any results)", () =>
     Base.getByIdList(decoder, [4, 5], conn)
-    |> Js.Promise.then_(res => {
-         Js.log(res);
+    |> Js.Promise.then_(res =>
          (
            switch (res) {
            | [||] => pass
            | _ => pass
            }
          )
-         |> Js.Promise.resolve;
-       })
+         |> Js.Promise.resolve
+       )
   );
+  testPromise("getByIdList (returns a result)", () => {
+    let userClauses =
+      SqlComposer.Select.(
+        select
+        |> where({j|AND $table.`id` = ?|j})
+        |> where({j|AND $table.`type_` = ?|j})
+      );
+    let params = Json.Encode.([|int(1), string("dog")|] |> jsonArray);
+    Base.getOneBy(userClauses, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: int, type_: "dog"}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
