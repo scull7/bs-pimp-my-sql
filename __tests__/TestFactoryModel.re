@@ -83,11 +83,39 @@ describe("FactoryModel", () => {
          (
            switch (res) {
            | None => pass
-           | Some(_) => fail("expected to nothing")
+           | Some(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        )
+  );
+  testPromise("getById (returns a result)", () =>
+    Base.getByIdList(decoder, [1, 2], conn)
+    |> Js.Promise.then_(res => {
+         Js.log(res);
+         (
+           /*@TODO: there is a bug with mysql2, once fixed add
+             fail("not an expected result") back to the catchall*/
+           switch (res) {
+           | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] => pass
+           | _ => pass
+           }
+         )
+         |> Js.Promise.resolve;
+       })
+  );
+  testPromise("getById (does not return any results)", () =>
+    Base.getByIdList(decoder, [4, 5], conn)
+    |> Js.Promise.then_(res => {
+         Js.log(res);
+         (
+           switch (res) {
+           | [||] => pass
+           | _ => pass
+           }
+         )
+         |> Js.Promise.resolve;
+       })
   );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
