@@ -89,7 +89,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getByIdList (returns a result)", () =>
+  testPromise("getByIdList (returns 2 results)", () =>
     Base.getByIdList(decoder, [1, 2], conn)
     |> Js.Promise.then_(res =>
          (
@@ -127,14 +127,14 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: int, type_: "dog"}) => pass
+           | Some({id: 1, type_: "dog"}) => pass
            | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        );
   });
-  testPromise("getOneBy (returns a result)", () => {
+  testPromise("getOneBy (does not return a result)", () => {
     let userClauses =
       SqlComposer.Select.(
         select
@@ -148,6 +148,42 @@ describe("FactoryModel", () => {
            switch (res) {
            | None => pass
            | Some(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("get (returns 2 results)", () => {
+    let userClauses =
+      SqlComposer.Select.(
+        select
+        |> where({j|AND $table.`id` != ?|j})
+        |> where({j|AND $table.`type_` LIKE CONCAT("%", ?, "%")|j})
+      );
+    let params = Json.Encode.([|int(1), string("a")|] |> jsonArray);
+    Base.get(userClauses, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [|{id: 3, type_: "elephant"}, {id: 2, type_: "cat"}|] => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("get (does not return any results)", () => {
+    let userClauses =
+      SqlComposer.Select.(
+        select |> where({j|AND $table.`type_` LIKE CONCAT(?, "%")|j})
+      );
+    let params = Json.Encode.([|string("z")|] |> jsonArray);
+    Base.get(userClauses, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [||] => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
