@@ -20,4 +20,10 @@ module Generator: (Config: Config) => {
     Js.Json.t,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(option('a));
+  let get: (
+    SqlComposer.Select.t,
+    Js.Json.t => 'a,
+    Js.Json.t,
+    SqlCommon.Make_sql(MySql2).connection
+  ) => Js.Promise.t(array('a));
 };
