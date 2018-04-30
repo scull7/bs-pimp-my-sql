@@ -25,4 +25,11 @@ module Generator = (Config: Config) => {
       params,
       conn,
     );
+  let get = (user, decoder, params, conn) =>
+    Query.get(
+      decoder,
+      SqlComposer.Select.to_sql(sqlFactory(user)),
+      params,
+      conn,
+    );
 };
