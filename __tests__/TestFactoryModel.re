@@ -115,7 +115,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getByIdList (returns a result)", () => {
+  testPromise("getOneBy (returns a result)", () => {
     let userClauses =
       SqlComposer.Select.(
         select
@@ -129,6 +129,25 @@ describe("FactoryModel", () => {
            switch (res) {
            | Some({id: int, type_: "dog"}) => pass
            | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getOneBy (returns a result)", () => {
+    let userClauses =
+      SqlComposer.Select.(
+        select
+        |> where({j|AND $table.`id` = ?|j})
+        |> where({j|AND $table.`type_` = ?|j})
+      );
+    let params = Json.Encode.([|int(1), string("cat")|] |> jsonArray);
+    Base.getOneBy(userClauses, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
