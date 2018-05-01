@@ -48,7 +48,7 @@ let createTestData = conn => {
 
 createTestData(conn);
 
-/* @TODO - improve tests by checking the actual content of the results */
+/* @TODO - improve tests for insertBatch by checking the actual content of the results */
 describe("Query", () => {
   let decoder = json => {
     id: Json.Decode.field("id", Json.Decode.int, json),
