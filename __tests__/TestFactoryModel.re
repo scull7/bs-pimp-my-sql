@@ -216,6 +216,36 @@ describe("FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("update (returns 1 result)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 1, type_: "hippopotamus"}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("update (returns 1 result)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
