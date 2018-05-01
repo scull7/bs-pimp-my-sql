@@ -54,7 +54,7 @@ let factory = (table, base, user) =>
 
 /* Public */
 /* @TODO - the base and user functions don't necessarily need to user
-   the SqlComposer.Select.select type defined locally, figure out
+   SqlComposer.Select.select to initialize their states, figure out
    how to change this so that we will always know exactly what goes
    into the base and user function.*/
 let make = (table, base, user) => factory(table, base, user);
