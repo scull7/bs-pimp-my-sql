@@ -49,8 +49,6 @@ let createTestData = conn => {
 createTestData(conn);
 
 describe("Query", () => {
-  let encoder = x =>
-    [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
   let decoder = json => {
     id: Json.Decode.field("id", Json.Decode.int, json),
     type_: Json.Decode.field("type_", Json.Decode.string, json),
@@ -198,7 +196,9 @@ describe("Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
-  testPromise("insertBatch (returns 2 results)", () =>
+  testPromise("insertBatch (returns 2 results)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
@@ -217,9 +217,11 @@ describe("Query", () => {
            }
          )
          |> Js.Promise.resolve
-       )
-  );
-  testPromise("insertBatch (fails and throws unique constraint error)", () =>
+       );
+  });
+  testPromise("insertBatch (fails and throws unique constraint error)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
@@ -238,9 +240,11 @@ describe("Query", () => {
            }
          )
          |> Js.Promise.resolve
-       )
-  );
-  testPromise("insertBatch (given empty array returns nothing)", () =>
+       );
+  });
+  testPromise("insertBatch (given empty array returns nothing)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
@@ -259,8 +263,8 @@ describe("Query", () => {
            }
          )
          |> Js.Promise.resolve
-       )
-  );
+       );
+  });
   testPromise("update (returns 1 result)", () => {
     let record = {type_: "hamster"};
     let encoder = x =>
