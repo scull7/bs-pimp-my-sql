@@ -48,8 +48,9 @@ let createTestData = conn => {
 
 createTestData(conn);
 
-/* @TODO - improve tests for insertBatch by checking the actual content of the results */
 describe("Query", () => {
+  let encoder = x =>
+    [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
   let decoder = json => {
     id: Json.Decode.field("id", Json.Decode.int, json),
     type_: Json.Decode.field("type_", Json.Decode.string, json),
@@ -60,7 +61,7 @@ describe("Query", () => {
          (
            switch (res) {
            | Some({id: 3, type_: "elephant"}) => pass
-           | None => fail("not an expected result")
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -115,7 +116,7 @@ describe("Query", () => {
          (
            switch (res) {
            | Some({id: 3, type_: "elephant"}) => pass
-           | None => fail("not an expected result")
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -201,7 +202,7 @@ describe("Query", () => {
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
@@ -211,7 +212,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([|_, _|]) => pass
+           | `Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -222,7 +223,7 @@ describe("Query", () => {
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
@@ -243,7 +244,7 @@ describe("Query", () => {
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
