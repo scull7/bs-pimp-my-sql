@@ -6,13 +6,11 @@ let removeHeadOfList = list =>
   };
 
 let mergeGroupBy = (base, userClauses) =>
-  SqlComposer.Select.(
-    userClauses
-    |> List.rev
-    |> removeHeadOfList
-    |> List.fold_left((acc, x) => group_by(x, acc), base)
-    |> (x => x.group_by)
-  );
+  userClauses
+  |> List.rev
+  |> removeHeadOfList
+  |> List.fold_left((acc, x) => SqlComposer.Select.group_by(x, acc), base)
+  |> (x => x.group_by);
 
 let mergeOrderBy = (baseClauses, userClauses) =>
   if (List.length(userClauses) == 0) {
@@ -27,13 +25,11 @@ let mergeOrderBy = (baseClauses, userClauses) =>
   };
 
 let mergeWhere = (base, userClauses) =>
-  SqlComposer.Select.(
-    userClauses
-    |> List.rev
-    |> removeHeadOfList
-    |> List.fold_left((acc, x) => where(x, acc), base)
-    |> (x => x.where)
-  );
+  userClauses
+  |> List.rev
+  |> removeHeadOfList
+  |> List.fold_left((acc, x) => SqlComposer.Select.where(x, acc), base)
+  |> (x => x.where);
 
 let mergeFields = (base, userClauses) =>
   userClauses
