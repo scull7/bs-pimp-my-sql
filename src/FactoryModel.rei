@@ -32,4 +32,11 @@ module Generator: (Config: Config) => {
     'b,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(option('a));
+  let update: (
+    Js.Json.t => 'a,
+    Json.Encode.encoder('b),
+    'b,
+    int,
+    SqlCommon.Make_sql(MySql2).connection
+  ) => Js.Promise.t(option('a));
 };
