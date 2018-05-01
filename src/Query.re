@@ -74,3 +74,13 @@ let insertBatch =
          |> Js.Promise.resolve
        )
   };
+
+let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
+  let params =
+    Json.Encode.(
+      [|encoder @@ record, int @@ id|] |> jsonArray |> Params.positional
+    );
+  let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
+  Sql.Promise.mutate(conn, ~sql, ~params?, ())
+  |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
+};
