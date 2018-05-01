@@ -173,8 +173,10 @@ describe("Query", () => {
   });
   testPromise("insert (returns 1 result)", () => {
     let decoder = json => json;
-    let record = [%raw "{\"type_\": \"pangolin\"}"];
-    Query.insert(base, table, decoder, animalToJson, record, conn)
+    let record = {type_: "pangolin"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -188,7 +190,9 @@ describe("Query", () => {
   testPromise("insert (fails and throws error)", () => {
     let decoder = json => json;
     let record = {type_: "elephant"};
-    Query.insert(base, table, decoder, animalToJson, record, conn)
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          fail("expected to throw unique constraint error")
          |> Js.Promise.resolve
