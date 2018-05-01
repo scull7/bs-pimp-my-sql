@@ -56,7 +56,7 @@ module Config = {
     );
 };
 
-module Base = FactoryModel.Generator(Config);
+module Model = FactoryModel.Generator(Config);
 
 /* Tests */
 describe("FactoryModel", () => {
@@ -66,7 +66,7 @@ describe("FactoryModel", () => {
     type_: Json.Decode.field("type_", Json.Decode.string, json),
   };
   testPromise("getById (returns a result)", () =>
-    Base.getById(decoder, 1, conn)
+    Model.getById(decoder, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -78,7 +78,7 @@ describe("FactoryModel", () => {
        )
   );
   testPromise("getById (does not return a result)", () =>
-    Base.getById(decoder, 5, conn)
+    Model.getById(decoder, 5, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -90,7 +90,7 @@ describe("FactoryModel", () => {
        )
   );
   testPromise("getByIdList (returns 2 results)", () =>
-    Base.getByIdList(decoder, [1, 2], conn)
+    Model.getByIdList(decoder, [1, 2], conn)
     |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
@@ -104,7 +104,7 @@ describe("FactoryModel", () => {
        )
   );
   testPromise("getByIdList (does not return any results)", () =>
-    Base.getByIdList(decoder, [4, 5], conn)
+    Model.getByIdList(decoder, [4, 5], conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -123,7 +123,7 @@ describe("FactoryModel", () => {
         |> where({j|AND $table.`type_` = ?|j})
       );
     let params = Json.Encode.([|int(1), string("dog")|] |> jsonArray);
-    Base.getOneBy(userClauses, decoder, params, conn)
+    Model.getOneBy(userClauses, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -142,7 +142,7 @@ describe("FactoryModel", () => {
         |> where({j|AND $table.`type_` = ?|j})
       );
     let params = Json.Encode.([|int(1), string("cat")|] |> jsonArray);
-    Base.getOneBy(userClauses, decoder, params, conn)
+    Model.getOneBy(userClauses, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -161,7 +161,7 @@ describe("FactoryModel", () => {
         |> where({j|AND $table.`type_` LIKE CONCAT("%", ?, "%")|j})
       );
     let params = Json.Encode.([|int(1), string("a")|] |> jsonArray);
-    Base.get(userClauses, decoder, params, conn)
+    Model.get(userClauses, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -178,7 +178,7 @@ describe("FactoryModel", () => {
         select |> where({j|AND $table.`type_` LIKE CONCAT(?, "%")|j})
       );
     let params = Json.Encode.([|string("z")|] |> jsonArray);
-    Base.get(userClauses, decoder, params, conn)
+    Model.get(userClauses, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
