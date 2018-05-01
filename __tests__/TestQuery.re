@@ -9,8 +9,6 @@ type animalExternal = {
 
 type animalInternal = {type_: string};
 
-external animalToJson : animalInternal => Js.Json.t = "%identity";
-
 let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqltest";
