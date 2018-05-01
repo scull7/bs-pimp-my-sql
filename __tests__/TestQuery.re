@@ -262,6 +262,38 @@ describe("Query", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("update (returns 1 result)", () => {
+    let decoder = json => json;
+    let record = {type_: "hamster"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => pass
+           | None => fail("expected to get 1 result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("update (fails and does not return anything)", () => {
+    let decoder = json => json;
+    let record = {type_: "goose"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => fail("expected to get nothing back")
+           | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
