@@ -39,4 +39,9 @@ module Generator: (Config: Config) => {
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(option('a));
+  let softCompoundDelete: (
+    Js.Json.t => 'a,
+    int,
+    SqlCommon.Make_sql(MySql2).connection
+  ) => Js.Promise.t(option('a));
 };

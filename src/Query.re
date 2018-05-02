@@ -84,3 +84,14 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
 };
+
+let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
+  let params = Json.Encode.([|int @@ id|] |> jsonArray |> Params.positional);
+  let sql = {j|
+    UPDATE $table
+    SET $table.`deleted` = 1, $table.`deleted_timestamp` = NOW()
+    WHERE $table.`id` = ?
+  |j};
+  Sql.Promise.mutate(conn, ~sql, ~params?, ())
+  |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
+};

@@ -51,4 +51,12 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
+  let softCompoundDelete = (decoder, id, conn) =>
+    Query.softCompoundDelete(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      decoder,
+      id,
+      conn,
+    );
 };

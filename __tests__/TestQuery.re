@@ -5,6 +5,7 @@ module Sql = SqlCommon.Make_sql(MySql2);
 type animalExternal = {
   id: int,
   type_: string,
+  deleted: int,
 };
 
 type animalInternal = {type_: string};
@@ -25,6 +26,8 @@ let createTable = {j|
   CREATE TABLE $table (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     type_ VARCHAR(120) NOT NULL,
+    deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_timestamp TIMESTAMP NULL DEFAULT NULL,
     primary key (id),
     unique(type_)
   );
@@ -44,13 +47,14 @@ let createTestData = conn => {
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
 };
 
-createTestData(conn);
-
 describe("Query", () => {
-  let decoder = json => {
-    id: Json.Decode.field("id", Json.Decode.int, json),
-    type_: Json.Decode.field("type_", Json.Decode.string, json),
-  };
+  createTestData(conn);
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
   testPromise("getById (returns 1 result)", () =>
     Query.getById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
@@ -194,6 +198,16 @@ describe("Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
+  testPromise("insert (fails and throws bad field error)", () => {
+    let record = {type_: "flamingo"};
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   testPromise("insertBatch (returns 2 results)", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
@@ -293,6 +307,40 @@ describe("Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("update (fails and throws bad field error)", () => {
+    let record = {type_: "hippopotamus"};
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
+  testPromise("softCompoundDelete (returns 1 result)", () =>
+    Query.softCompoundDelete(base, table, decoder, 2, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 2, type_: "cat", deleted: 1}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("softCompoundDelete (fails and does not return anything)", () =>
+    Query.softCompoundDelete(base, table, decoder, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => fail("not an expected result")
+           | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);

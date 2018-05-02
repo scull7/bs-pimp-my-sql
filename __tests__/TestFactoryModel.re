@@ -4,6 +4,7 @@ open Jest;
 type animal = {
   id: int,
   type_: string,
+  deleted: int,
 };
 
 type animalInternal = {type_: string};
@@ -27,6 +28,8 @@ let createTable = {j|
   CREATE TABLE $table (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     type_ VARCHAR(120) NOT NULL,
+    deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_timestamp TIMESTAMP NULL DEFAULT NULL,
     primary key (id),
     unique(type_)
   );
@@ -54,6 +57,7 @@ module Config = {
       select
       |> field("animal.id")
       |> field("animal.type_")
+      |> field("animal.deleted")
       |> order_by(`Desc("animal.id"))
     );
 };
@@ -63,10 +67,12 @@ module Model = FactoryModel.Generator(Config);
 /* Tests */
 describe("FactoryModel", () => {
   createTestData(conn);
-  let decoder = json => {
-    id: Json.Decode.field("id", Json.Decode.int, json),
-    type_: Json.Decode.field("type_", Json.Decode.string, json),
-  };
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
   testPromise("getById (returns a result)", () =>
     Model.getById(decoder, 1, conn)
     |> Js.Promise.then_(res =>
@@ -216,6 +222,16 @@ describe("FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("insert (does not return a result, throws bad field error)", () => {
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "flamingo"};
+    Model.insert(decoder, encoder, record, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   testPromise("update (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -231,7 +247,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (returns 1 result)", () => {
+  testPromise("update (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
@@ -246,6 +262,40 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("update (does not return a result, throws bad field error)", () => {
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
+  testPromise("softCompoundDelete (returns 1 result)", () =>
+    Model.softCompoundDelete(decoder, 2, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 2, type_: "cat", deleted: 1}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("softCompoundDelete (does not return a result)", () =>
+    Model.softCompoundDelete(decoder, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
