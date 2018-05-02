@@ -216,6 +216,16 @@ describe("FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("insert (does not return a result, throws bad field error)", () => {
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "flamingo"};
+    Model.insert(decoder, encoder, record, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   testPromise("update (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -231,7 +241,7 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (returns 1 result)", () => {
+  testPromise("update (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
