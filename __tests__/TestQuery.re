@@ -303,6 +303,16 @@ describe("Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("update (fails and throws bad field error)", () => {
+    let record = {type_: "hippopotamus"};
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
