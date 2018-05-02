@@ -71,7 +71,7 @@ describe("FactoryModel", () => {
          (
            switch (res) {
            | Some({id: 1, type_: "dog"}) => pass
-           | _ => fail("expected to get {id: 1, type_: 'dog'}")
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -109,7 +109,7 @@ describe("FactoryModel", () => {
          (
            switch (res) {
            | [||] => pass
-           | _ => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

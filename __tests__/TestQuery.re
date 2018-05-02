@@ -2,9 +2,12 @@ open Jest;
 
 module Sql = SqlCommon.Make_sql(MySql2);
 
-type animal = {type_: string};
+type animalExternal = {
+  id: int,
+  type_: string,
+};
 
-external animalToJson : animal => Js.Json.t = "%identity";
+type animalInternal = {type_: string};
 
 let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
@@ -43,64 +46,62 @@ let createTestData = conn => {
 
 createTestData(conn);
 
-/* @TODO - improve tests by checking the actual content of the results */
 describe("Query", () => {
-  testPromise("getById (returns 1 result)", () => {
-    let decoder = json => json;
+  let decoder = json => {
+    id: Json.Decode.field("id", Json.Decode.int, json),
+    type_: Json.Decode.field("type_", Json.Decode.string, json),
+  };
+  testPromise("getById (returns 1 result)", () =>
     Query.getById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => pass
-           | None => fail("expected to get 1 result")
+           | Some({id: 3, type_: "elephant"}) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
-       );
-  });
-  testPromise("getById (does not return anything)", () => {
-    let decoder = json => json;
+       )
+  );
+  testPromise("getById (does not return anything)", () =>
     Query.getById(base, table, decoder, 4, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => fail("expected to get nothing back")
+           | Some(_) => fail("not an expected result")
            | None => pass
            }
          )
          |> Js.Promise.resolve
-       );
-  });
-  testPromise("getByIdList (returns 3 results)", () => {
-    let decoder = json => json;
-    Query.getByIdList(base, table, decoder, [1, 2, 3], conn)
+       )
+  );
+  testPromise("getByIdList (returns 3 results)", () =>
+    Query.getByIdList(base, table, decoder, [1, 2], conn)
     |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
-             fail("expected to get 3 results back") back to the catchall*/
-           switch (Array.length @@ res) {
-           | 3 => pass
+             fail("expected to get 2 results back") back to the catchall*/
+           switch (res) {
+           | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] => pass
            | _ => pass
            }
          )
          |> Js.Promise.resolve
-       );
-  });
-  testPromise("getByIdList (does not return anything)", () => {
-    let decoder = json => json;
+       )
+  );
+  testPromise("getByIdList (does not return anything)", () =>
     Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
     |> Js.Promise.then_(res =>
          (
-           switch (Array.length @@ res) {
-           | 0 => pass
-           | _ => fail("expected to get nothing back")
+           switch (res) {
+           | [||] => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
-       );
-  });
+       )
+  );
   testPromise("getOneBy (returns 1 result)", () => {
-    let decoder = json => json;
     let sql =
       SqlComposer.Select.(
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
@@ -110,15 +111,14 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => pass
-           | None => fail("expected to get something back")
+           | Some({id: 3, type_: "elephant"}) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        );
   });
   testPromise("getOneBy (does not return anything)", () => {
-    let decoder = json => json;
     let sql =
       SqlComposer.Select.(
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
@@ -128,7 +128,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => fail("expected to get nothing back")
+           | Some(_) => fail("not an expected result")
            | None => pass
            }
          )
@@ -136,7 +136,6 @@ describe("Query", () => {
        );
   });
   testPromise("get (returns 1 result)", () => {
-    let decoder = json => json;
     let sql =
       SqlComposer.Select.(
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
@@ -145,16 +144,15 @@ describe("Query", () => {
     Query.get(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
-           switch (Array.length @@ res) {
-           | 1 => pass
-           | _ => fail("expected to get 1 result")
+           switch (res) {
+           | [|{id: 3, type_: "elephant"}|] => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        );
   });
   testPromise("get (does not return anything)", () => {
-    let decoder = json => json;
     let sql =
       SqlComposer.Select.(
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
@@ -163,43 +161,46 @@ describe("Query", () => {
     Query.get(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
-           switch (Array.length @@ res) {
-           | 0 => pass
-           | _ => fail("expected to get nothing back")
+           switch (res) {
+           | [||] => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        );
   });
   testPromise("insert (returns 1 result)", () => {
-    let decoder = json => json;
-    let record = [%raw "{\"type_\": \"pangolin\"}"];
-    Query.insert(base, table, decoder, animalToJson, record, conn)
+    let record = {type_: "pangolin"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => pass
-           | None => fail("expected to get 1 result")
+           | Some({id: 4, type_: "pangolin"}) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        );
   });
-  testPromise("insert (fails and throws error)", () => {
-    let decoder = json => json;
+  testPromise("insert (fails and throws unique constraint error)", () => {
     let record = {type_: "elephant"};
-    Query.insert(base, table, decoder, animalToJson, record, conn)
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
-         fail("expected to throw unique constraint error")
-         |> Js.Promise.resolve
+         fail("not an expected result") |> Js.Promise.resolve
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
-  testPromise("insertBatch (returns 2 results)", () =>
+  testPromise("insertBatch (returns 2 results)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
@@ -209,18 +210,20 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([|_, _|]) => pass
-           | _ => fail("expected to get 2 results")
+           | `Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
-       )
-  );
-  testPromise("insertBatch (fails and throws error)", () =>
+       );
+  });
+  testPromise("insertBatch (fails and throws unique constraint error)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
@@ -231,17 +234,19 @@ describe("Query", () => {
          (
            switch (res) {
            | `Error(_) => pass
-           | `Ok(_) => fail("expected to throw unique constraint error")
+           | `Ok(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
-       )
-  );
-  testPromise("insertBatch (given empty array returns nothing)", () =>
+       );
+  });
+  testPromise("insertBatch (given empty array returns nothing)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder=animalToJson,
+      ~encoder,
       ~loader=animals => Js.Promise.resolve(animals),
       ~error=msg => msg,
       ~columns=[|"type_"|],
@@ -252,12 +257,42 @@ describe("Query", () => {
          (
            switch (res) {
            | `Ok([||]) => pass
-           | _ => fail("expected to get back nothing")
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
-       )
-  );
+       );
+  });
+  testPromise("update (returns 1 result)", () => {
+    let record = {type_: "hamster"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 1, type_: "hamster"}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("update (fails and does not return anything)", () => {
+    let record = {type_: "goose"};
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.update(base, table, decoder, encoder, record, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some(_) => fail("not an expected result")
+           | None => pass
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);

@@ -47,3 +47,13 @@ let insertBatch: (
   ~rows: array('a),
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t( [> `Error('c) | `Ok(array('b)) ]);
+
+let update: (
+  SqlComposer.Select.t,
+  string,
+  Js.Json.t => 'a,
+  Json.Encode.encoder('b),
+  'b,
+  int,
+  SqlCommon.Make_sql(MySql2).connection
+) => Js.Promise.t(option('a));
