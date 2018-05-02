@@ -17,15 +17,18 @@ Inside of a BuckleScript project:
 ```shell
 yarn add bs-sql-common bs-mysql2 bs-pimp-my-sql
 ```
-Then add `bs-sql-common`, `bs-mysql2`, and `bs-pimp-my-sql` to your `bs-dependencies`
-in `bsconfig.json`:
+
+Then add `@glennsl/bs-json`, `bs-sql-composer`, `bs-sql-common`, `bs-mysql2`, and
+`bs-pimp-my-sql` to your `bs-dependencies` in `bsconfig.json`:
 
 ```json
 {
   "bs-dependencies": [
+    "@glennsl/bs-json",
     "bs-mysql2",
     "bs-pimp-my-sql",
-    "bs-sql-common"
+    "bs-sql-common",
+    "bs-sql-composer"
   ]
 }
 ```
