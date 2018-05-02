@@ -285,7 +285,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 1, type_: "hamster"}) => pass
+           | `Ok(Some({id: 1, type_: "hamster"})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -300,8 +300,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => fail("not an expected result")
-           | None => pass
+           | `Ok(_) => fail("not an expected result")
+           | `NotFound => pass
            }
          )
          |> Js.Promise.resolve
