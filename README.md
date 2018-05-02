@@ -15,7 +15,19 @@ client.
 
 Inside of a BuckleScript project:
 ```shell
-yarn add bs-pimp-my-sql
+yarn add bs-sql-common bs-mysql2 bs-pimp-my-sql
+```
+Then add `bs-sql-common`, `bs-mysql2`, and `bs-pimp-my-sql` to your `bs-dependencies`
+in `bsconfig.json`:
+
+```json
+{
+  "bs-dependencies": [
+    "bs-mysql2",
+    "bs-pimp-my-sql",
+    "bs-sql-common"
+  ]
+}
 ```
 
 ## How do I use it?
@@ -40,7 +52,7 @@ module Config = {
     );
 };
 
-module Model = FactoryModel.Generator(Config);
+module Model = PimpMySql.FactoryModel.Generator(Config);
 
 let decoder = json =>
   Json.Decode.{
