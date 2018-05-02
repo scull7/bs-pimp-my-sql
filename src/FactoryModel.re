@@ -32,4 +32,23 @@ module Generator = (Config: Config) => {
       params,
       conn,
     );
+  let insert = (decoder, encoder, record, conn) =>
+    Query.insert(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      decoder,
+      encoder,
+      record,
+      conn,
+    );
+  let update = (decoder, encoder, record, id, conn) =>
+    Query.update(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      decoder,
+      encoder,
+      record,
+      id,
+      conn,
+    );
 };

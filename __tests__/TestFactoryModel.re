@@ -6,6 +6,8 @@ type animal = {
   type_: string,
 };
 
+type animalInternal = {type_: string};
+
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
@@ -184,6 +186,61 @@ describe("FactoryModel", () => {
            switch (res) {
            | [||] => pass
            | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insert (returns 1 result)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "monkey"};
+    Model.insert(decoder, encoder, record, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 4, type_: "monkey"}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insert (fails and throws unique constraint error)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "dog"};
+    Model.insert(decoder, encoder, record, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
+  testPromise("update (returns 1 result)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Some({id: 1, type_: "hippopotamus"}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("update (returns 1 result)", () => {
+    let encoder = x =>
+      [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
