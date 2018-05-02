@@ -47,9 +47,8 @@ let createTestData = conn => {
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
 };
 
-createTestData(conn);
-
 describe("Query", () => {
+  createTestData(conn);
   let decoder = json =>
     Json.Decode.{
       id: field("id", int, json),
