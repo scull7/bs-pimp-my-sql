@@ -15,54 +15,50 @@ client.
 
 Inside of a BuckleScript project:
 ```shell
-yarn add bs-mysql2 bs-pimp-my-sql
-```
-
-Then add `bs-mysql2` and `bs-pimp-my-sql` to your `bs-dependencies`
-in `bsconfig.json`:
-
-```json
-{
-  "bs-dependencies": [
-    "bs-mysql2",
-    "bs-pimp-my-sql"
-  ]
-}
+yarn add bs-pimp-my-sql
 ```
 
 ## How do I use it?
 
-### Execute a raw SQL query.
+### Using the Factory Model.
 ```reason
-open Util.Operators;
+module Sql = SqlCommon.Make_sql(MySql2);
 
-let db =
-  Mysql.Connection.make(~host="127.0.0.1", ~port=3306, ~user="root", ());
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ~database="example", ());
 
-let extractRows = response =>
-  switch response {
-  | PimpMySql.Promise.Mutation(_) => failwith("unexpected_mutation_result")
-  | PimpMySql.Promise.Select(s) => s.rows
+let table = "animal";
+
+module Config = {
+  let table = table;
+  let base =
+    SqlComposer.Select.(
+      select
+      |> field({j|$table.`id`|j})
+      |> field({j|$table.`type_`|j})
+      |> field({j|$table.`deleted`|j})
+      |> order_by(`Desc({j|$table.`id`|j}))
+    );
 };
 
-let decoder_search = json => {
-  search: json |> Json.Decode.field("search", Json.Decode.string)
-};
+module Model = FactoryModel.Generator(Config);
 
-PimpMySql.raw(~db, ~sql="SELECT ? AS search", ~params=[|"%ssearch"|], ())
->>= extractRows
->>= Js.Array.map(decoder_search)
->>= Js.log
+let decoder = json =>
+  Json.Decode.{
+    id: field("id", int, json),
+    type_: field("type_", string, json),
+    deleted: field("deleted", int, json),
+  };
 
-let decoder_result = json => {
-  result: json |> Json.Decode.field("result", Json.Decode.int)
-};
-
-PimpMySql.raw(~db, ~sql="SELECT 1 + ? + ? AS result", ~params=[|5, 6|], ())
->>= extractRows
->>= Js.Array.map(decoder_result)
->>= Js.log
-```
+Model.getById(decoder, 1, conn)
+|> Js.Promise.then_(res =>
+     (
+       switch (res) {
+       | Some(x) => <handle case for result>
+       | None => <handle case for no result>
+       }
+     )
+     |> Js.Promise.resolve
+   );
 
 ## What's missing?
 
