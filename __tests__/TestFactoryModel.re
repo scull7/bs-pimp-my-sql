@@ -256,6 +256,16 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("update (does not return a result, throws bad field error)", () => {
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    let record = {type_: "hippopotamus"};
+    Model.update(decoder, encoder, record, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
