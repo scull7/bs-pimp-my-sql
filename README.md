@@ -15,7 +15,7 @@ client.
 
 Inside of a BuckleScript project:
 ```shell
-yarn add bs-sql-common bs-mysql2 bs-pimp-my-sql
+yarn add @glennsl/bs-json bs-sql-composer bs-sql-common bs-mysql2 bs-pimp-my-sql
 ```
 
 Then add `@glennsl/bs-json`, `bs-sql-composer`, `bs-sql-common`, `bs-mysql2`, and
