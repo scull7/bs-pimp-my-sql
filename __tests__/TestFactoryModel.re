@@ -12,7 +12,7 @@ type animalInternal = {type_: string};
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
-let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqltest";
 
@@ -55,10 +55,10 @@ module Config = {
   let base =
     SqlComposer.Select.(
       select
-      |> field("animal.id")
-      |> field("animal.type_")
-      |> field("animal.deleted")
-      |> order_by(`Desc("animal.id"))
+      |> field({j|$table.`id`|j})
+      |> field({j|$table.`type_`|j})
+      |> field({j|$table.`deleted`|j})
+      |> order_by(`Desc({j|$table.`id`|j}))
     );
 };
 
