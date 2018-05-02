@@ -194,6 +194,16 @@ describe("Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
+  testPromise("insert (fails and throws bad field error)", () => {
+    let record = {type_: "flamingo"};
+    let encoder = x =>
+      [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
+    Query.insert(base, table, decoder, encoder, record, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
   testPromise("insertBatch (returns 2 results)", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
