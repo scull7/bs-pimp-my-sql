@@ -93,5 +93,12 @@ let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
     WHERE $table.`id` = ?
   |j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
+  |> Js.Promise.then_(((success, _)) =>
+       if (success == 1) {
+         getById(baseQuery, table, decoder, id, conn)
+         |> Js.Promise.then_(res => Js.Promise.resolve(`Ok(res)));
+       } else {
+         Js.Promise.resolve(`NotFound);
+       }
+     );
 };

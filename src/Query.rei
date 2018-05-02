@@ -46,7 +46,7 @@ let insertBatch: (
   ~columns: array(string),
   ~rows: array('a),
   SqlCommon.Make_sql(MySql2).connection
-) => Js.Promise.t( [> `Error('c) | `Ok(array('b)) ]);
+) => Js.Promise.t([> `Error('c) | `Ok(array('b)) ]);
 
 let update: (
   SqlComposer.Select.t,
@@ -64,4 +64,4 @@ let softCompoundDelete: (
   Js.Json.t => 'a,
   int,
   SqlCommon.Make_sql(MySql2).connection
-) => Js.Promise.t(option('a));
+) => Js.Promise.t([> `NotFound | `Ok(option('a)) ]);

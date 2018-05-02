@@ -277,7 +277,7 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 2, type_: "cat", deleted: 1}) => pass
+           | `Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -289,8 +289,8 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | None => pass
-           | Some(_) => fail("not an expected result")
+           | `NotFound => pass
+           | `Ok(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
