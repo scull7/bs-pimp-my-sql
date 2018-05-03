@@ -1,4 +1,4 @@
-let getById: (
+let getOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,

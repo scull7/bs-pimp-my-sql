@@ -4,7 +4,7 @@ module type Config = {
 };
 
 module Generator: (Config: Config) => {
-  let getById: (
+  let getOneById: (
     Js.Json.t => 'a,
     int,
     SqlCommon.Make_sql(MySql2).connection

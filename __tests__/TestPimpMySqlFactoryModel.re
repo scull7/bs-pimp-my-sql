@@ -73,8 +73,8 @@ describe("PimpMySql_FactoryModel", () => {
       type_: field("type_", string, json),
       deleted: field("deleted", int, json),
     };
-  testPromise("getById (returns a result)", () =>
-    Model.getById(decoder, 1, conn)
+  testPromise("getOneById (returns a result)", () =>
+    Model.getOneById(decoder, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -85,8 +85,8 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getById (does not return a result)", () =>
-    Model.getById(decoder, 5, conn)
+  testPromise("getOneById (does not return a result)", () =>
+    Model.getOneById(decoder, 5, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
