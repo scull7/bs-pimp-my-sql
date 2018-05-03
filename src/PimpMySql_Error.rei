@@ -1,0 +1,1 @@
+exception NotFound(string);
