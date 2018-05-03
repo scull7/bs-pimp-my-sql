@@ -41,8 +41,8 @@ module Generator = (Config: Config) => {
       record,
       conn,
     );
-  let update = (decoder, encoder, record, id, conn) =>
-    PimpMySql_Query.update(
+  let updateById = (decoder, encoder, record, id, conn) =>
+    PimpMySql_Query.updateById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,

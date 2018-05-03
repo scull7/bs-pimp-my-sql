@@ -232,11 +232,11 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("update (returns 1 result)", () => {
+  testPromise("updateById (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.update(decoder, encoder, record, 1, conn)
+    Model.updateById(decoder, encoder, record, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -247,11 +247,11 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (does not return a result)", () => {
+  testPromise("updateById (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.update(decoder, encoder, record, 99, conn)
+    Model.updateById(decoder, encoder, record, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -262,11 +262,12 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (does not return a result, throws bad field error)", () => {
+  testPromise(
+    "updateById (does not return a result, throws bad field error)", () => {
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.update(decoder, encoder, record, 1, conn)
+    Model.updateById(decoder, encoder, record, 1, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )

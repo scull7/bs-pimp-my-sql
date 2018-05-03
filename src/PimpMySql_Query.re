@@ -77,7 +77,7 @@ let insertBatch =
        )
   };
 
-let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
+let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
   let params =
     Json.Encode.(
       [|encoder @@ record, int @@ id|]
@@ -91,7 +91,7 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
          getById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
-         PimpMySql_Error.NotFound("ERROR: update failed")
+         PimpMySql_Error.NotFound("ERROR: updateById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }

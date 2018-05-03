@@ -277,11 +277,11 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (returns 1 result)", () => {
+  testPromise("updateById (returns 1 result)", () => {
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.update(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -292,11 +292,11 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (fails and does not return anything)", () => {
+  testPromise("updateById (fails and does not return anything)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.update(base, table, decoder, encoder, record, 99, conn)
+    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 9, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -307,11 +307,11 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("update (fails and throws bad field error)", () => {
+  testPromise("updateById (fails and throws bad field error)", () => {
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.update(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
