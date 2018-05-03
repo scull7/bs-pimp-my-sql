@@ -12,9 +12,9 @@ type animalInternal = {type_: string};
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
-let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-let db = "pimpmysqltest";
+let db = "pimpmysqlfactorymodel";
 
 let table = "animal";
 
@@ -55,10 +55,10 @@ module Config = {
   let base =
     SqlComposer.Select.(
       select
-      |> field("animal.id")
-      |> field("animal.type_")
-      |> field("animal.deleted")
-      |> order_by(`Desc("animal.id"))
+      |> field({j|$table.`id`|j})
+      |> field({j|$table.`type_`|j})
+      |> field({j|$table.`deleted`|j})
+      |> order_by(`Desc({j|$table.`id`|j}))
     );
 };
 
@@ -240,7 +240,7 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 1, type_: "hippopotamus"}) => pass
+           | Result.Ok(Some({id: 1, type_: "hippopotamus"})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -255,8 +255,8 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | None => pass
-           | Some(_) => fail("not an expected result")
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -272,25 +272,25 @@ describe("FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDelete (returns 1 result)", () =>
-    Model.softCompoundDelete(decoder, 2, conn)
+  testPromise("softCompoundDeleteById (returns 1 result)", () =>
+    Model.softCompoundDeleteById(decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 2, type_: "cat", deleted: 1}) => pass
+           | Result.Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
            | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDelete (does not return a result)", () =>
-    Model.softCompoundDelete(decoder, 99, conn)
+  testPromise("softCompoundDeleteById (does not return a result)", () =>
+    Model.softCompoundDeleteById(decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | None => pass
-           | Some(_) => fail("not an expected result")
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

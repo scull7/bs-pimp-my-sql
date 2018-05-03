@@ -20,6 +20,7 @@
   "bs-dependencies": [
     "@glennsl/bs-json",
     "bs-mysql2",
+    "bs-result",
     "bs-sql-common",
     "bs-sql-composer"
   ],

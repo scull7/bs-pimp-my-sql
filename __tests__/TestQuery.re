@@ -12,7 +12,7 @@ type animalInternal = {type_: string};
 
 let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-let db = "pimpmysqltest";
+let db = "pimpmysqlquery";
 
 let table = "animals";
 
@@ -224,7 +224,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
+           | Result.Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -247,8 +247,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Error(_) => pass
-           | `Ok(_) => fail("not an expected result")
+           | Result.Error(_) => pass
+           | Result.Ok(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -270,7 +270,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([||]) => pass
+           | Result.Ok([||]) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -285,7 +285,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 1, type_: "hamster"}) => pass
+           | Result.Ok(Some({id: 1, type_: "hamster"})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -300,8 +300,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => fail("not an expected result")
-           | None => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -317,25 +317,26 @@ describe("Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDelete (returns 1 result)", () =>
-    Query.softCompoundDelete(base, table, decoder, 2, conn)
+  testPromise("softCompoundDeleteById (returns 1 result)", () =>
+    Query.softCompoundDeleteById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 2, type_: "cat", deleted: 1}) => pass
+           | Result.Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
            | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDelete (fails and does not return anything)", () =>
-    Query.softCompoundDelete(base, table, decoder, 99, conn)
+  testPromise(
+    "softCompoundDeleteById (fails and does not return anything)", () =>
+    Query.softCompoundDeleteById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some(_) => fail("not an expected result")
-           | None => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

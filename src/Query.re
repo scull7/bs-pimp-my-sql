@@ -56,7 +56,7 @@ let insert = (baseQuery, table, decoder, encoder, record, conn) => {
 let insertBatch =
     (~name, ~table, ~encoder, ~loader, ~error, ~columns, ~rows, conn) =>
   switch (rows) {
-  | [||] => `Ok([||]) |> Js.Promise.resolve
+  | [||] => Result.pure([||]) |> Js.Promise.resolve
   | _ =>
     Sql.Promise.mutate_batch(
       conn,
@@ -66,11 +66,11 @@ let insertBatch =
       ~rows=Belt_Array.map(rows, encoder),
     )
     |> Js.Promise.then_((_) => loader(rows))
-    |> Js.Promise.then_(result => `Ok(result) |> Js.Promise.resolve)
+    |> Js.Promise.then_(result => Result.pure(result) |> Js.Promise.resolve)
     |> Js.Promise.catch(e =>
          {j|ERROR: $name - $e|j}
          |> error
-         |> (x => `Error(x))
+         |> (x => Result.error(x))
          |> Js.Promise.resolve
        )
   };
@@ -82,10 +82,19 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
     );
   let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
+  |> Js.Promise.then_(((success, _)) =>
+       if (success == 1) {
+         getById(baseQuery, table, decoder, id, conn)
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
+       } else {
+         PimpMySql_Error.NotFound("ERROR: update failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve;
+       }
+     );
 };
 
-let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
+let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
   let params = Json.Encode.([|int @@ id|] |> jsonArray |> Params.positional);
   let sql = {j|
     UPDATE $table
@@ -93,5 +102,14 @@ let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
     WHERE $table.`id` = ?
   |j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_((_) => getById(baseQuery, table, decoder, id, conn));
+  |> Js.Promise.then_(((success, _)) =>
+       if (success == 1) {
+         getById(baseQuery, table, decoder, id, conn)
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
+       } else {
+         PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve;
+       }
+     );
 };
