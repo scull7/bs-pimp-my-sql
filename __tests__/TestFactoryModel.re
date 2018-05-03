@@ -255,8 +255,8 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Error(_) => pass
-           | Result.Ok(_) => fail("not an expected result")
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -289,8 +289,8 @@ describe("FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Error(_) => pass
-           | Result.Ok(_) => fail("not an expected result")
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

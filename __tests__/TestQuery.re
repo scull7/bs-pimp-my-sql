@@ -300,8 +300,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(_) => fail("not an expected result")
-           | Result.Error(_) => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -334,8 +334,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(_) => fail("not an expected result")
-           | Result.Error(_) => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

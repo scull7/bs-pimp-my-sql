@@ -87,7 +87,9 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
          getById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
        } else {
-         Result.Error("ERROR: update failed") |> Js.Promise.resolve;
+         PimpMySql_Error.NotFound("ERROR: update failed")
+         |> (x => Result.Error(x))
+         |> Js.Promise.resolve;
        }
      );
 };
@@ -105,7 +107,8 @@ let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
          getById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
        } else {
-         Result.Error("ERROR: softCompoundDelete failed")
+         PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")
+         |> (x => Result.Error(x))
          |> Js.Promise.resolve;
        }
      );

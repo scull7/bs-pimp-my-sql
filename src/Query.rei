@@ -56,7 +56,7 @@ let update: (
   'b,
   int,
   SqlCommon.Make_sql(MySql2).connection
-) => Js.Promise.t(Result.result(string, option('a)));
+) => Js.Promise.t(Result.result(exn, option('a)));
 
 let softCompoundDelete: (
   SqlComposer.Select.t,
@@ -64,4 +64,4 @@ let softCompoundDelete: (
   Js.Json.t => 'a,
   int,
   SqlCommon.Make_sql(MySql2).connection
-) => Js.Promise.t(Result.result(string, option('a)));
+) => Js.Promise.t(Result.result(exn, option('a)));
