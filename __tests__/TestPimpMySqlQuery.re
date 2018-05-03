@@ -55,8 +55,8 @@ describe("PimpMySql_Query", () => {
       type_: field("type_", string, json),
       deleted: field("deleted", int, json),
     };
-  testPromise("getById (returns 1 result)", () =>
-    PimpMySql_Query.getById(base, table, decoder, 3, conn)
+  testPromise("getOneById (returns 1 result)", () =>
+    PimpMySql_Query.getOneById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -67,8 +67,8 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getById (does not return anything)", () =>
-    PimpMySql_Query.getById(base, table, decoder, 4, conn)
+  testPromise("getOneById (does not return anything)", () =>
+    PimpMySql_Query.getOneById(base, table, decoder, 4, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -317,8 +317,8 @@ describe("PimpMySql_Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDeleteById (returns 1 result)", () =>
-    PimpMySql_Query.softCompoundDeleteById(base, table, decoder, 2, conn)
+  testPromise("archiveCompoundById (returns 1 result)", () =>
+    PimpMySql_Query.archiveCompoundById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -329,9 +329,8 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise(
-    "softCompoundDeleteById (fails and does not return anything)", () =>
-    PimpMySql_Query.softCompoundDeleteById(base, table, decoder, 99, conn)
+  testPromise("archiveCompoundById (fails and does not return anything)", () =>
+    PimpMySql_Query.archiveCompoundById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

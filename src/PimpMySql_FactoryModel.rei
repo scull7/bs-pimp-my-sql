@@ -4,7 +4,7 @@ module type Config = {
 };
 
 module Generator: (Config: Config) => {
-  let getById: (
+  let getOneById: (
     Js.Json.t => 'a,
     int,
     SqlCommon.Make_sql(MySql2).connection
@@ -39,7 +39,7 @@ module Generator: (Config: Config) => {
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(Result.result(exn, option('a)));
-  let softCompoundDeleteById: (
+  let archiveCompoundById: (
     Js.Json.t => 'a,
     int,
     SqlCommon.Make_sql(MySql2).connection

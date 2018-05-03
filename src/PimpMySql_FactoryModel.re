@@ -2,8 +2,8 @@ module type Config = {let table: string; let base: SqlComposer.Select.t;};
 
 module Generator = (Config: Config) => {
   let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
-  let getById = (decoder, id, conn) =>
-    PimpMySql_Query.getById(
+  let getOneById = (decoder, id, conn) =>
+    PimpMySql_Query.getOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
@@ -51,8 +51,8 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
-  let softCompoundDeleteById = (decoder, id, conn) =>
-    PimpMySql_Query.softCompoundDeleteById(
+  let archiveCompoundById = (decoder, id, conn) =>
+    PimpMySql_Query.archiveCompoundById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,

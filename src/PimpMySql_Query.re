@@ -4,7 +4,7 @@ module Sql = SqlCommon.Make_sql(MySql2);
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */
 /* @TODO - there is a bug with mysql2, getByIdList will not work until fixed*/
-let getById = (baseQuery, table, decoder, id, conn) => {
+let getOneById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
       baseQuery |> where({j|AND $table.`id` = ?|j}) |> to_sql
@@ -51,7 +51,7 @@ let insert = (baseQuery, table, decoder, encoder, record, conn) => {
   let sql = {j|INSERT INTO $table SET ?|j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((_, id)) =>
-       getById(baseQuery, table, decoder, id, conn)
+       getOneById(baseQuery, table, decoder, id, conn)
      );
 };
 
@@ -88,7 +88,7 @@ let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
-         getById(baseQuery, table, decoder, id, conn)
+         getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
          PimpMySql_Error.NotFound("ERROR: updateById failed")
@@ -98,7 +98,7 @@ let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
-let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
+let archiveCompoundById = (baseQuery, table, decoder, id, conn) => {
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray |> PimpMySql_Params.positional);
   let sql = {j|
@@ -109,7 +109,7 @@ let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
-         getById(baseQuery, table, decoder, id, conn)
+         getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
          PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")

@@ -73,8 +73,8 @@ describe("PimpMySql_FactoryModel", () => {
       type_: field("type_", string, json),
       deleted: field("deleted", int, json),
     };
-  testPromise("getById (returns a result)", () =>
-    Model.getById(decoder, 1, conn)
+  testPromise("getOneById (returns a result)", () =>
+    Model.getOneById(decoder, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -85,8 +85,8 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("getById (does not return a result)", () =>
-    Model.getById(decoder, 5, conn)
+  testPromise("getOneById (does not return a result)", () =>
+    Model.getOneById(decoder, 5, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -273,8 +273,8 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDeleteById (returns 1 result)", () =>
-    Model.softCompoundDeleteById(decoder, 2, conn)
+  testPromise("archiveCompoundById (returns 1 result)", () =>
+    Model.archiveCompoundById(decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -285,8 +285,8 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDeleteById (does not return a result)", () =>
-    Model.softCompoundDeleteById(decoder, 99, conn)
+  testPromise("archiveCompoundById (does not return a result)", () =>
+    Model.archiveCompoundById(decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

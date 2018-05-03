@@ -1,4 +1,4 @@
-let getById: (
+let getOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,
@@ -58,7 +58,7 @@ let updateById: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
 
-let softCompoundDeleteById: (
+let archiveCompoundById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,
