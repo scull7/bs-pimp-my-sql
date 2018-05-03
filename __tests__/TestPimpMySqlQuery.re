@@ -1,7 +1,6 @@
 open Jest;
 
-module Sql = SqlCommon.Make_sql(MySql2);
-
+/* Types */
 type animalExternal = {
   id: int,
   type_: string,
@@ -10,7 +9,10 @@ type animalExternal = {
 
 type animalInternal = {type_: string};
 
-let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+/* Database Creation and Connection */
+module Sql = SqlCommon.Make_sql(MySql2);
+
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqlquery";
 
@@ -47,6 +49,7 @@ let createTestData = conn => {
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
 };
 
+/* Tests */
 describe("PimpMySql_Query", () => {
   createTestData(conn);
   let decoder = json =>
