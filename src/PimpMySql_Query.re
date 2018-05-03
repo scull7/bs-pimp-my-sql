@@ -1,6 +1,15 @@
 /* Private */
 module Sql = SqlCommon.Make_sql(MySql2);
 
+let oneRow = (decoder, (rows, _)) =>
+  switch (Belt_Array.length(rows)) {
+  | 1 => Some(decoder(rows[0]))
+  | 0 => None
+  | _ => failwith("unexpected_result_count")
+  };
+
+let rows = (decoder, (rows, _)) => Belt_Array.map(rows, decoder);
+
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */
 /* @TODO - there is a bug with mysql2, getByIdList will not work until fixed*/
@@ -11,9 +20,7 @@ let getOneById = (baseQuery, table, decoder, id, conn) => {
     );
   let params = Some(`Positional(Json.Encode.([|int(id)|] |> jsonArray)));
   Sql.Promise.query(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(result =>
-       PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
-     );
+  |> Js.Promise.then_(result => oneRow(decoder, result) |> Js.Promise.resolve);
 };
 
 let getByIdList = (baseQuery, table, decoder, idList, conn) => {
@@ -24,25 +31,19 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
   let params =
     Json.Encode.(idList |> list(int)) |> PimpMySql_Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(result =>
-       PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
-     );
+  |> Js.Promise.then_(result => rows(decoder, result) |> Js.Promise.resolve);
 };
 
 let getOneBy = (decoder, sql, params, conn) => {
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(result =>
-       PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
-     );
+  |> Js.Promise.then_(result => oneRow(decoder, result) |> Js.Promise.resolve);
 };
 
 let get = (decoder, sql, params, conn) => {
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(result =>
-       PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
-     );
+  |> Js.Promise.then_(result => rows(decoder, result) |> Js.Promise.resolve);
 };
 
 let insert = (baseQuery, table, decoder, encoder, record, conn) => {
