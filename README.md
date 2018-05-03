@@ -86,6 +86,7 @@ Model.getById(decoder, 1, conn)
      )
      |> Js.Promise.resolve
    );
+```
 
 ## What's missing?
 
