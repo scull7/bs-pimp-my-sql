@@ -2,7 +2,7 @@ open Jest;
 
 let table = "animal";
 
-describe("FactorySql", () => {
+describe("PimpMySql_FactorySql", () => {
   test("make (merging all clauses from base and user)", () => {
     let base =
       SqlComposer.Select.(
@@ -25,7 +25,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -74,7 +75,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -123,7 +125,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -171,7 +174,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -218,7 +222,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -264,7 +269,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -308,7 +314,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -351,7 +358,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -393,7 +401,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -434,7 +443,8 @@ describe("FactorySql", () => {
         |> limit(~offset="5", ~row_count=Some(1))
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -475,7 +485,8 @@ describe("FactorySql", () => {
         |> join("JOIN foo ON foo.id = blah.foo_id")
       );
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",
@@ -501,7 +512,8 @@ describe("FactorySql", () => {
     let base = SqlComposer.Select.(select |> field("animal.id"));
     let user = SqlComposer.Select.(select |> field("animal.type"));
     let output =
-      FactorySql.make(table, base, user) |> SqlComposer.Select.to_sql;
+      PimpMySql_FactorySql.make(table, base, user)
+      |> SqlComposer.Select.to_sql;
     let expected =
       String.concat(
         "\n",

@@ -47,7 +47,7 @@ let createTestData = conn => {
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
 };
 
-describe("Query", () => {
+describe("PimpMySql_Query", () => {
   createTestData(conn);
   let decoder = json =>
     Json.Decode.{
@@ -56,7 +56,7 @@ describe("Query", () => {
       deleted: field("deleted", int, json),
     };
   testPromise("getById (returns 1 result)", () =>
-    Query.getById(base, table, decoder, 3, conn)
+    PimpMySql_Query.getById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -68,7 +68,7 @@ describe("Query", () => {
        )
   );
   testPromise("getById (does not return anything)", () =>
-    Query.getById(base, table, decoder, 4, conn)
+    PimpMySql_Query.getById(base, table, decoder, 4, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -80,7 +80,7 @@ describe("Query", () => {
        )
   );
   testPromise("getByIdList (returns 3 results)", () =>
-    Query.getByIdList(base, table, decoder, [1, 2], conn)
+    PimpMySql_Query.getByIdList(base, table, decoder, [1, 2], conn)
     |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
@@ -94,7 +94,7 @@ describe("Query", () => {
        )
   );
   testPromise("getByIdList (does not return anything)", () =>
-    Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
+    PimpMySql_Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -111,7 +111,7 @@ describe("Query", () => {
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
       );
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -128,7 +128,7 @@ describe("Query", () => {
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
       );
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -145,7 +145,7 @@ describe("Query", () => {
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
       );
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -162,7 +162,7 @@ describe("Query", () => {
         base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
       );
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(decoder, sql, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -177,7 +177,7 @@ describe("Query", () => {
     let record = {type_: "pangolin"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -192,7 +192,7 @@ describe("Query", () => {
     let record = {type_: "elephant"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          fail("not an expected result") |> Js.Promise.resolve
        )
@@ -202,7 +202,7 @@ describe("Query", () => {
     let record = {type_: "flamingo"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
@@ -211,7 +211,7 @@ describe("Query", () => {
   testPromise("insertBatch (returns 2 results)", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
-    Query.insertBatch(
+    PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
@@ -234,7 +234,7 @@ describe("Query", () => {
   testPromise("insertBatch (fails and throws unique constraint error)", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
-    Query.insertBatch(
+    PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
@@ -257,7 +257,7 @@ describe("Query", () => {
   testPromise("insertBatch (given empty array returns nothing)", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
-    Query.insertBatch(
+    PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
@@ -281,7 +281,7 @@ describe("Query", () => {
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.update(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.update(base, table, decoder, encoder, record, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -296,7 +296,7 @@ describe("Query", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.update(base, table, decoder, encoder, record, 99, conn)
+    PimpMySql_Query.update(base, table, decoder, encoder, record, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -311,14 +311,14 @@ describe("Query", () => {
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    Query.update(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.update(base, table, decoder, encoder, record, 1, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
   testPromise("softCompoundDelete (returns 1 result)", () =>
-    Query.softCompoundDelete(base, table, decoder, 2, conn)
+    PimpMySql_Query.softCompoundDelete(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -330,7 +330,7 @@ describe("Query", () => {
        )
   );
   testPromise("softCompoundDelete (fails and does not return anything)", () =>
-    Query.softCompoundDelete(base, table, decoder, 99, conn)
+    PimpMySql_Query.softCompoundDelete(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

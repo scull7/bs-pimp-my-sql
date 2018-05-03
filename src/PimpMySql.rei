@@ -1,7 +1,7 @@
-module Query = Query;
+module Query = PimpMySql_Query;
 
-module Params = Params;
+module Params = PimpMySql_Params;
 
-module Decode = Decode;
+module Decode = PimpMySql_Decode;
 
-module FactoryModel = FactoryModel;
+module FactoryModel = PimpMySql_FactoryModel;

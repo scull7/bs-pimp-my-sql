@@ -62,10 +62,10 @@ module Config = {
     );
 };
 
-module Model = FactoryModel.Generator(Config);
+module Model = PimpMySql_FactoryModel.Generator(Config);
 
 /* Tests */
-describe("FactoryModel", () => {
+describe("PimpMySql_FactoryModel", () => {
   createTestData(conn);
   let decoder = json =>
     Json.Decode.{

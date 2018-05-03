@@ -12,7 +12,7 @@ let getById = (baseQuery, table, decoder, id, conn) => {
   let params = Some(`Positional(Json.Encode.([|int(id)|] |> jsonArray)));
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Decode.oneRow(decoder, result) |> Js.Promise.resolve
+       PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
      );
 };
 
@@ -21,31 +21,33 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
     SqlComposer.Select.(
       baseQuery |> where({j| AND $table.`id` IN (?) |j}) |> to_sql
     );
-  let params = Json.Encode.(idList |> list(int)) |> Params.positional;
+  let params =
+    Json.Encode.(idList |> list(int)) |> PimpMySql_Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Decode.rows(decoder, result) |> Js.Promise.resolve
+       PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let getOneBy = (decoder, sql, params, conn) => {
-  let params = Params.positional(params);
+  let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Decode.oneRow(decoder, result) |> Js.Promise.resolve
+       PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let get = (decoder, sql, params, conn) => {
-  let params = Params.positional(params);
+  let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
-       Decode.rows(decoder, result) |> Js.Promise.resolve
+       PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
      );
 };
 
 let insert = (baseQuery, table, decoder, encoder, record, conn) => {
-  let params = [|record|] |> Json.Encode.array(encoder) |> Params.positional;
+  let params =
+    [|record|] |> Json.Encode.array(encoder) |> PimpMySql_Params.positional;
   let sql = {j|INSERT INTO $table SET ?|j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((_, id)) =>
@@ -78,7 +80,9 @@ let insertBatch =
 let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
   let params =
     Json.Encode.(
-      [|encoder @@ record, int @@ id|] |> jsonArray |> Params.positional
+      [|encoder @@ record, int @@ id|]
+      |> jsonArray
+      |> PimpMySql_Params.positional
     );
   let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
@@ -93,7 +97,8 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
 };
 
 let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
-  let params = Json.Encode.([|int @@ id|] |> jsonArray |> Params.positional);
+  let params =
+    Json.Encode.([|int @@ id|] |> jsonArray |> PimpMySql_Params.positional);
   let sql = {j|
     UPDATE $table
     SET $table.`deleted` = 1, $table.`deleted_timestamp` = NOW()

@@ -1,9 +1,9 @@
 module type Config = {let table: string; let base: SqlComposer.Select.t;};
 
 module Generator = (Config: Config) => {
-  let sqlFactory = FactorySql.make(Config.table, Config.base);
+  let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
   let getById = (decoder, id, conn) =>
-    Query.getById(
+    PimpMySql_Query.getById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
@@ -11,7 +11,7 @@ module Generator = (Config: Config) => {
       conn,
     );
   let getByIdList = (decoder, idList, conn) =>
-    Query.getByIdList(
+    PimpMySql_Query.getByIdList(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
@@ -19,21 +19,21 @@ module Generator = (Config: Config) => {
       conn,
     );
   let getOneBy = (user, decoder, params, conn) =>
-    Query.getOneBy(
+    PimpMySql_Query.getOneBy(
       decoder,
       SqlComposer.Select.to_sql(sqlFactory(user)),
       params,
       conn,
     );
   let get = (user, decoder, params, conn) =>
-    Query.get(
+    PimpMySql_Query.get(
       decoder,
       SqlComposer.Select.to_sql(sqlFactory(user)),
       params,
       conn,
     );
   let insert = (decoder, encoder, record, conn) =>
-    Query.insert(
+    PimpMySql_Query.insert(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
@@ -42,7 +42,7 @@ module Generator = (Config: Config) => {
       conn,
     );
   let update = (decoder, encoder, record, id, conn) =>
-    Query.update(
+    PimpMySql_Query.update(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
@@ -52,7 +52,7 @@ module Generator = (Config: Config) => {
       conn,
     );
   let softCompoundDelete = (decoder, id, conn) =>
-    Query.softCompoundDelete(
+    PimpMySql_Query.softCompoundDelete(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
