@@ -12,7 +12,7 @@ type animalInternal = {type_: string};
 
 let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-let db = "pimpmysqltest";
+let db = "pimpmysqlquery";
 
 let table = "animals";
 
@@ -300,8 +300,8 @@ describe("PimpMySql_Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(_) => fail("not an expected result")
-           | Result.Error(_) => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -317,8 +317,8 @@ describe("PimpMySql_Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDelete (returns 1 result)", () =>
-    PimpMySql_Query.softCompoundDelete(base, table, decoder, 2, conn)
+  testPromise("softCompoundDeleteById (returns 1 result)", () =>
+    PimpMySql_Query.softCompoundDeleteById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -329,13 +329,14 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDelete (fails and does not return anything)", () =>
-    PimpMySql_Query.softCompoundDelete(base, table, decoder, 99, conn)
+  testPromise(
+    "softCompoundDeleteById (fails and does not return anything)", () =>
+    PimpMySql_Query.softCompoundDeleteById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(_) => fail("not an expected result")
-           | Result.Error(_) => pass
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve

@@ -51,8 +51,8 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
-  let softCompoundDelete = (decoder, id, conn) =>
-    PimpMySql_Query.softCompoundDelete(
+  let softCompoundDeleteById = (decoder, id, conn) =>
+    PimpMySql_Query.softCompoundDeleteById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       decoder,
