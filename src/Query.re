@@ -66,11 +66,11 @@ let insertBatch =
       ~rows=Belt_Array.map(rows, encoder),
     )
     |> Js.Promise.then_((_) => loader(rows))
-    |> Js.Promise.then_(result => Result.Ok(result) |> Js.Promise.resolve)
+    |> Js.Promise.then_(result => Result.pure(result) |> Js.Promise.resolve)
     |> Js.Promise.catch(e =>
          {j|ERROR: $name - $e|j}
          |> error
-         |> (x => Result.Error(x))
+         |> (x => Result.error(x))
          |> Js.Promise.resolve
        )
   };
@@ -85,10 +85,10 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
          getById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
          PimpMySql_Error.NotFound("ERROR: update failed")
-         |> (x => Result.Error(x))
+         |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }
      );
@@ -105,10 +105,10 @@ let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
          getById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
          PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")
-         |> (x => Result.Error(x))
+         |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }
      );
