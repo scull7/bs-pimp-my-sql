@@ -317,8 +317,8 @@ describe("Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDelete (returns 1 result)", () =>
-    Query.softCompoundDelete(base, table, decoder, 2, conn)
+  testPromise("softCompoundDeleteById (returns 1 result)", () =>
+    Query.softCompoundDeleteById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -329,8 +329,9 @@ describe("Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDelete (fails and does not return anything)", () =>
-    Query.softCompoundDelete(base, table, decoder, 99, conn)
+  testPromise(
+    "softCompoundDeleteById (fails and does not return anything)", () =>
+    Query.softCompoundDeleteById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

@@ -272,8 +272,8 @@ describe("FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("softCompoundDelete (returns 1 result)", () =>
-    Model.softCompoundDelete(decoder, 2, conn)
+  testPromise("softCompoundDeleteById (returns 1 result)", () =>
+    Model.softCompoundDeleteById(decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -284,8 +284,8 @@ describe("FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("softCompoundDelete (does not return a result)", () =>
-    Model.softCompoundDelete(decoder, 99, conn)
+  testPromise("softCompoundDeleteById (does not return a result)", () =>
+    Model.softCompoundDeleteById(decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

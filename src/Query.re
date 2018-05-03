@@ -94,7 +94,7 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
-let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
+let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
   let params = Json.Encode.([|int @@ id|] |> jsonArray |> Params.positional);
   let sql = {j|
     UPDATE $table
