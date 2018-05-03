@@ -1,7 +1,6 @@
 open Jest;
 
-module Sql = SqlCommon.Make_sql(MySql2);
-
+/* Types */
 type animalExternal = {
   id: int,
   type_: string,
@@ -10,11 +9,16 @@ type animalExternal = {
 
 type animalInternal = {type_: string};
 
-let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+/* Database Creation and Connection */
+module Sql = SqlCommon.Make_sql(MySql2);
+
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqlquery";
 
 let table = "animals";
+
+let table2 = "colors";
 
 let createDb = {j|CREATE DATABASE $db;|j};
 
@@ -38,15 +42,34 @@ let seedTable = {j|
   VALUES ('dog'), ('cat'), ('elephant');
 |j};
 
+let createTable2 = {j|
+  CREATE TABLE $table2 (
+    id MEDIUMINT NOT NULL,
+    type_ VARCHAR(120) NOT NULL,
+    deleted TINYINT(1) NOT NULL DEFAULT 0,
+    primary key (type_)
+  );
+|j};
+
+let seedTable2 = {j|
+  INSERT INTO $table2 (id, type_)
+  VALUES (1, 'red'), (1, 'green'), (1, 'blue');
+|j};
+
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
+
+let base2 = SqlComposer.Select.(select |> field("*") |> from(table2));
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, (_) => ());
   Sql.mutate(conn, ~sql=useDB, (_) => ());
   Sql.mutate(conn, ~sql=createTable, (_) => ());
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
+  Sql.mutate(conn, ~sql=createTable2, (_) => ());
+  Sql.mutate(conn, ~sql=seedTable2, (_) => ());
 };
 
+/* Tests */
 describe("PimpMySql_Query", () => {
   createTestData(conn);
   let decoder = json =>
@@ -78,6 +101,13 @@ describe("PimpMySql_Query", () => {
          )
          |> Js.Promise.resolve
        )
+  );
+  testPromise("getOneById (fails and throws unexpected result count)", () =>
+    PimpMySql_Query.getOneById(base2, table2, decoder, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass)
   );
   testPromise("getByIdList (returns 3 results)", () =>
     PimpMySql_Query.getByIdList(base, table, decoder, [1, 2], conn)
@@ -194,9 +224,9 @@ describe("PimpMySql_Query", () => {
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
-         fail("not an expected result") |> Js.Promise.resolve
+         Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
   testPromise("insert (fails and throws bad field error)", () => {
     let record = {type_: "flamingo"};
