@@ -224,7 +224,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
+           | Result.Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -247,8 +247,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Error(_) => pass
-           | `Ok(_) => fail("not an expected result")
+           | Result.Error(_) => pass
+           | Result.Ok(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -270,7 +270,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok([||]) => pass
+           | Result.Ok([||]) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -285,7 +285,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok(Some({id: 1, type_: "hamster"})) => pass
+           | Result.Ok(Some({id: 1, type_: "hamster"})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -300,8 +300,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok(_) => fail("not an expected result")
-           | `NotFound => pass
+           | Result.Ok(_) => fail("not an expected result")
+           | Result.Error(_) => pass
            }
          )
          |> Js.Promise.resolve
@@ -322,7 +322,7 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
+           | Result.Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -334,8 +334,8 @@ describe("Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | `Ok(_) => fail("not an expected result")
-           | `NotFound => pass
+           | Result.Ok(_) => fail("not an expected result")
+           | Result.Error(_) => pass
            }
          )
          |> Js.Promise.resolve

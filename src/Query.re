@@ -56,7 +56,7 @@ let insert = (baseQuery, table, decoder, encoder, record, conn) => {
 let insertBatch =
     (~name, ~table, ~encoder, ~loader, ~error, ~columns, ~rows, conn) =>
   switch (rows) {
-  | [||] => `Ok([||]) |> Js.Promise.resolve
+  | [||] => Result.Ok([||]) |> Js.Promise.resolve
   | _ =>
     Sql.Promise.mutate_batch(
       conn,
@@ -66,11 +66,11 @@ let insertBatch =
       ~rows=Belt_Array.map(rows, encoder),
     )
     |> Js.Promise.then_((_) => loader(rows))
-    |> Js.Promise.then_(result => `Ok(result) |> Js.Promise.resolve)
+    |> Js.Promise.then_(result => Result.Ok(result) |> Js.Promise.resolve)
     |> Js.Promise.catch(e =>
          {j|ERROR: $name - $e|j}
          |> error
-         |> (x => `Error(x))
+         |> (x => Result.Error(x))
          |> Js.Promise.resolve
        )
   };
@@ -85,9 +85,9 @@ let update = (baseQuery, table, decoder, encoder, record, id, conn) => {
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
          getById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(`Ok(res)));
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
        } else {
-         Js.Promise.resolve(`NotFound);
+         Result.Error("ERROR: update failed") |> Js.Promise.resolve;
        }
      );
 };
@@ -103,9 +103,10 @@ let softCompoundDelete = (baseQuery, table, decoder, id, conn) => {
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
          getById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(`Ok(res)));
+         |> Js.Promise.then_(res => Js.Promise.resolve(Result.Ok(res)));
        } else {
-         Js.Promise.resolve(`NotFound);
+         Result.Error("ERROR: softCompoundDelete failed")
+         |> Js.Promise.resolve;
        }
      );
 };
