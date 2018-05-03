@@ -56,7 +56,7 @@ let insert = (baseQuery, table, decoder, encoder, record, conn) => {
 let insertBatch =
     (~name, ~table, ~encoder, ~loader, ~error, ~columns, ~rows, conn) =>
   switch (rows) {
-  | [||] => Result.Ok([||]) |> Js.Promise.resolve
+  | [||] => Result.pure([||]) |> Js.Promise.resolve
   | _ =>
     Sql.Promise.mutate_batch(
       conn,
