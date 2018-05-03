@@ -14,7 +14,7 @@ module Sql = SqlCommon.Make_sql(MySql2);
 
 let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
-let db = "pimpmysqltest";
+let db = "pimpmysqlfactorymodel";
 
 let table = "animal";
 
