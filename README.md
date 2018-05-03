@@ -36,7 +36,7 @@ and `bs-sql-composer` to your `bs-dependencies` in `bsconfig.json`:
 
 ## How do I use it?
 
-## General Usage
+### General Usage
 
 The way you should access modules in `PimpMySql` is as follows:
 
