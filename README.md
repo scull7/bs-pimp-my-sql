@@ -97,9 +97,9 @@ Everything not checked...
   - [ ] _(rawInsert)_ Raw SQL insert
   - [ ] _(rawUpdate)_ Raw SQL update
   - [ ] INSERT
-    - [ ] _(insert)_ basic wrapper
+    - [x] _(insert)_ basic wrapper
   - [ ] UPDATE
-    - [ ] _(update)_ Basic wrapper
+    - [x] _(updateById)_ Basic wrapper
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
     - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
   - [ ] DELETE
@@ -108,27 +108,28 @@ Everything not checked...
   - [ ] Archive
     - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
     - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-    - [ ] _(archiveCompound)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
+    - [x] _(archiveCompoundById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
   - [ ] SELECT
     - [ ] Transforms
       - [ ] JSON column parse
       - [ ] Nest dot notation transform
       - [ ] Null out nested objects
-    - [ ] _(get)_ using the Compositional SQL DSL
-    - [ ] _getWhere)_ using a custom where clause
-    - [ ] _(getOne)_ with custom where clause
-    - [ ] _(getOneById)_ using the `id` column - must fit `PrimaryId` interface
+    - [x] _(get)_ using the Compositional SQL DSL
+    - [x] _(getByIdList)_ using the `id` column - must fit `PrimaryId` interface
+    - [x] _(getOneBy)_ with custom where clause
+    - [x] _(getOneById)_ using the `id` column - must fit `PrimaryId` interface
+    - [ ] _(getWhere)_ using a custom where clause
     - [ ] _(getWhereParams)_ using the `ObjectHash` interface
 - [ ] Model
-  - [ ] Compositional SQL DSL
-  - [ ] Model Creation DSL
-  - [ ] Query interface
+  - [x] Compositional SQL DSL
+  - [x] Model Creation DSL
+  - [x] Query interface
     - [ ] INSERT
-      - [ ] _(create)_
+      - [x] _(insert)_
       - [ ] Pre-Create intercept
       - [ ] Post-Create intercept
     - [ ] UPDATE
-      - [ ] _(update)_
+      - [x] _(updateById)_
       - [ ] Pre-Update intercept
       - [ ] Post-Update intercept
       - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
@@ -138,12 +139,13 @@ Everything not checked...
     - [ ] Archive
       - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
       - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-      - [ ] _(archiveCompound)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
+      - [x] _(archiveCompoundById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
     - [ ] SELECT
       - [ ] Transforms - _(Dependent upon Query Interface implementation)_
-      - [ ] _(get)_ using the Compositional SQL DSL
-      - [ ] _(getOne)_ with custom where clause
-      - [ ] _(getOneById)_ using the `id` column - must fit `PrimaryId` interface
+      - [x] _(get)_ using the Compositional SQL DSL
+      - [x] _(getByIdList)_ using the `id` column - must fit `PrimaryId` interface
+      - [x] _(getOneBy)_ with custom where clause
+      - [x] _(getOneById)_ using the `id` column - must fit `PrimaryId` interface
       - [ ] _(getWhere)_ using a custom where clause
       - [ ] _(getWhereParams)_ using the `ObjectHash` interface
 - [ ] Search - _This needs some re-design to better fit ReasonML language semantics._
