@@ -144,7 +144,7 @@ Everything not checked...
       - [ ] Transforms - _(Dependent upon Query Interface implementation)_
       - [x] _(get)_ using the Compositional SQL DSL
       - [x] _(getByIdList)_ using the `id` column - must fit `PrimaryId` interface
-      - [ ] _(getOneBy)_ with custom where clause
+      - [x] _(getOneBy)_ with custom where clause
       - [x] _(getOneById)_ using the `id` column - must fit `PrimaryId` interface
       - [ ] _(getWhere)_ using a custom where clause
       - [ ] _(getWhereParams)_ using the `ObjectHash` interface
