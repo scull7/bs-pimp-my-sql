@@ -98,7 +98,7 @@ let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
-let softCompoundDeleteById = (baseQuery, table, decoder, id, conn) => {
+let archiveCompoundById = (baseQuery, table, decoder, id, conn) => {
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray |> PimpMySql_Params.positional);
   let sql = {j|
