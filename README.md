@@ -36,6 +36,17 @@ and `bs-sql-composer` to your `bs-dependencies` in `bsconfig.json`:
 
 ## How do I use it?
 
+## General Usage
+
+The way you should access modules in `PimpMySql` is as follows:
+
+```reason
+PimpMySql.<Module>
+```
+
+Of course you can always directly call the internal files, namespaced with `PimpMySql_`, but
+that is not recommended since these files are implementation details.
+
 ### Using the Factory Model.
 ```reason
 module Sql = SqlCommon.Make_sql(MySql2);
@@ -75,6 +86,7 @@ Model.getById(decoder, 1, conn)
      )
      |> Js.Promise.resolve
    );
+```
 
 ## What's missing?
 
