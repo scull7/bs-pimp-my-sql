@@ -18,6 +18,8 @@ let db = "pimpmysqlfactorymodel";
 
 let table = "animal";
 
+let table2 = "color";
+
 let createDb = {j|CREATE DATABASE $db;|j};
 
 let useDB = {j|USE $db;|j};
@@ -40,13 +42,27 @@ let seedTable = {j|
   VALUES ('dog'), ('cat'), ('elephant');
 |j};
 
-let base = SqlComposer.Select.(select |> field("*") |> from(table));
+let createTable2 = {j|
+  CREATE TABLE $table2 (
+    id MEDIUMINT NOT NULL,
+    type_ VARCHAR(120) NOT NULL,
+    deleted TINYINT(1) NOT NULL DEFAULT 0,
+    primary key (type_)
+  );
+|j};
+
+let seedTable2 = {j|
+  INSERT INTO $table2 (id, type_)
+  VALUES (1, 'red'), (1, 'green'), (1, 'blue');
+|j};
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, (_) => ());
   Sql.mutate(conn, ~sql=useDB, (_) => ());
   Sql.mutate(conn, ~sql=createTable, (_) => ());
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
+  Sql.mutate(conn, ~sql=createTable2, (_) => ());
+  Sql.mutate(conn, ~sql=seedTable2, (_) => ());
 };
 
 /* Model Factory */
@@ -63,6 +79,20 @@ module Config = {
 };
 
 module Model = PimpMySql_FactoryModel.Generator(Config);
+
+module Config2 = {
+  let table = table2;
+  let base =
+    SqlComposer.Select.(
+      select
+      |> field({j|$table2.`id`|j})
+      |> field({j|$table2.`type_`|j})
+      |> field({j|$table2.`deleted`|j})
+      |> order_by(`Desc({j|$table2.`id`|j}))
+    );
+};
+
+module Model2 = PimpMySql_FactoryModel.Generator(Config2);
 
 /* Tests */
 describe("PimpMySql_FactoryModel", () => {
@@ -96,6 +126,13 @@ describe("PimpMySql_FactoryModel", () => {
          )
          |> Js.Promise.resolve
        )
+  );
+  testPromise("getOneById (fails and throws unexpected result count)", () =>
+    Model2.getOneById(decoder, 1, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass)
   );
   testPromise("getByIdList (returns 2 results)", () =>
     Model.getByIdList(decoder, [1, 2], conn)
