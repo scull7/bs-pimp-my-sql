@@ -29,13 +29,13 @@ module Generator: (Config: Config) => {
     'b,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(option(Config.t));
-  let updateById: (
+  let updateOneById: (
     Json.Encode.encoder('b),
     'b,
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(Result.result(exn, option(Config.t)));
-  let archiveCompoundById: (
+  let archiveCompoundOneById: (
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(Result.result(exn, option(Config.t)));

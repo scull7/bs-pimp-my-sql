@@ -233,11 +233,11 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("updateById (returns 1 result)", () => {
+  testPromise("updateOneById (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateById(encoder, record, 1, conn)
+    Model.updateOneById(encoder, record, 1, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -248,11 +248,11 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (does not return a result)", () => {
+  testPromise("updateOneById (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateById(encoder, record, 99, conn)
+    Model.updateOneById(encoder, record, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -264,18 +264,18 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise(
-    "updateById (does not return a result, throws bad field error)", () => {
+    "updateOneById (does not return a result, throws bad field error)", () => {
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateById(encoder, record, 1, conn)
+    Model.updateOneById(encoder, record, 1, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("archiveCompoundById (returns 1 result)", () =>
-    Model.archiveCompoundById(2, conn)
+  testPromise("archiveCompoundOneById (returns 1 result)", () =>
+    Model.archiveCompoundOneById(2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -286,8 +286,8 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("archiveCompoundById (does not return a result)", () =>
-    Model.archiveCompoundById(99, conn)
+  testPromise("archiveCompoundOneById (does not return a result)", () =>
+    Model.archiveCompoundOneById(99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

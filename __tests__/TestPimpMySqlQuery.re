@@ -280,11 +280,19 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (returns 1 result)", () => {
+  testPromise("updateOneById (returns 1 result)", () => {
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      1,
+      conn,
+    )
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -295,11 +303,19 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (fails and does not return anything)", () => {
+  testPromise("updateOneById (fails and does not return anything)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 9, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      9,
+      conn,
+    )
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -310,18 +326,26 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (fails and throws bad field error)", () => {
+  testPromise("updateOneById (fails and throws bad field error)", () => {
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      1,
+      conn,
+    )
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("archiveCompoundById (returns 1 result)", () =>
-    PimpMySql_Query.archiveCompoundById(base, table, decoder, 2, conn)
+  testPromise("archiveCompoundOneById (returns 1 result)", () =>
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -332,8 +356,9 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("archiveCompoundById (fails and does not return anything)", () =>
-    PimpMySql_Query.archiveCompoundById(base, table, decoder, 99, conn)
+  testPromise(
+    "archiveCompoundOneById (fails and does not return anything)", () =>
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

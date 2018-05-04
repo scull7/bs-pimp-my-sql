@@ -78,7 +78,7 @@ let insertBatch =
        )
   };
 
-let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
+let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
   let params =
     Json.Encode.(
       [|encoder @@ record, int @@ id|]
@@ -99,9 +99,9 @@ let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
-let archiveCompoundById = (baseQuery, table, decoder, id, conn) => {
+let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let params =
-    Json.Encode.([|int @@ id|] |> jsonArray |> PimpMySql_Params.positional);
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   let sql = {j|
     UPDATE $table
     SET $table.`deleted` = 1, $table.`deleted_timestamp` = NOW()

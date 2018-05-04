@@ -48,7 +48,7 @@ let insertBatch: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result('c, array('b)));
 
-let updateById: (
+let updateOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,
@@ -58,7 +58,7 @@ let updateById: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
 
-let archiveCompoundById: (
+let archiveCompoundOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,

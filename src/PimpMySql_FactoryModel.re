@@ -46,8 +46,8 @@ module Generator = (Config: Config) => {
       record,
       conn,
     );
-  let updateById = (encoder, record, id, conn) =>
-    PimpMySql_Query.updateById(
+  let updateOneById = (encoder, record, id, conn) =>
+    PimpMySql_Query.updateOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
@@ -56,8 +56,8 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
-  let archiveCompoundById = (id, conn) =>
-    PimpMySql_Query.archiveCompoundById(
+  let archiveCompoundOneById = (id, conn) =>
+    PimpMySql_Query.archiveCompoundOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,

@@ -105,7 +105,7 @@ Everything not checked...
   - [ ] INSERT
     - [x] _(insert)_ basic wrapper
   - [ ] UPDATE
-    - [x] _(updateById)_ Basic wrapper
+    - [x] _(updateOneById)_ Basic wrapper
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
     - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
   - [ ] DELETE
@@ -114,7 +114,7 @@ Everything not checked...
   - [ ] Archive
     - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
     - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-    - [x] _(archiveCompoundById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
+    - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
   - [ ] SELECT
     - [ ] Transforms
       - [ ] JSON column parse
@@ -135,7 +135,7 @@ Everything not checked...
       - [ ] Pre-Create intercept
       - [ ] Post-Create intercept
     - [ ] UPDATE
-      - [x] _(updateById)_
+      - [x] _(updateOneById)_
       - [ ] Pre-Update intercept
       - [ ] Post-Update intercept
       - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
@@ -145,7 +145,7 @@ Everything not checked...
     - [ ] Archive
       - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
       - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-      - [x] _(archiveCompoundById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
+      - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row - must fit the `ArchiveCompound` interface
     - [ ] SELECT
       - [ ] Transforms - _(Dependent upon Query Interface implementation)_
       - [x] _(get)_ using the Compositional SQL DSL
