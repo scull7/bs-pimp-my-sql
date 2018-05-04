@@ -9,7 +9,8 @@ let getOneById = (baseQuery, table, decoder, id, conn) => {
     SqlComposer.Select.(
       baseQuery |> where({j|AND $table.`id` = ?|j}) |> to_sql
     );
-  let params = Some(`Positional(Json.Encode.([|int(id)|] |> jsonArray)));
+  let params =
+    Json.Encode.([|int(id)|] |> jsonArray) |> PimpMySql_Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
