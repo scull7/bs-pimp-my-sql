@@ -29,7 +29,7 @@ let createTable = {j|
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     type_ VARCHAR(120) NOT NULL,
     deleted TINYINT(1) NOT NULL DEFAULT 0,
-    deleted_timestamp TIMESTAMP NULL DEFAULT NULL,
+    deleted_timestamp int(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id),
     unique(type_)
   );

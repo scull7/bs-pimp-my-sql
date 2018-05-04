@@ -106,7 +106,7 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   let sql = {j|
     UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = NOW()
+    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
     WHERE $table.`id` = ?
   |j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
