@@ -63,6 +63,7 @@ type animal = {
 
 module Config = {
   let t = animal;
+  let connection = conn;
   let table = table;
   let decoder = json =>
     Json.Decode.{
@@ -82,7 +83,7 @@ module Config = {
 
 module Model = PimpMySql.FactoryModel.Generator(Config);
 
-Model.getById(1, conn)
+Model.getById(1)
 |> Js.Promise.then_(res =>
      (
        switch (res) {
