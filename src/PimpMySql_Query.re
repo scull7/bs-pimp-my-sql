@@ -30,7 +30,8 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
      );
 };
 
-let getOneBy = (decoder, sql, params, conn) => {
+let getOneBy = (baseQuery, decoder, params, conn) => {
+  let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
@@ -38,7 +39,8 @@ let getOneBy = (decoder, sql, params, conn) => {
      );
 };
 
-let get = (decoder, sql, params, conn) => {
+let get = (baseQuery, decoder, params, conn) => {
+  let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>

@@ -110,11 +110,9 @@ describe("PimpMySql_Query", () => {
   );
   testPromise("getOneBy (returns 1 result)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -127,11 +125,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("getOneBy (does not return anything)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -144,11 +140,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("get (returns 1 result)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -161,11 +155,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("get (does not return anything)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

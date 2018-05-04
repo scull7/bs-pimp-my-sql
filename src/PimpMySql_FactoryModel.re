@@ -7,46 +7,46 @@ module type Config = {
 
 module Generator = (Config: Config) => {
   let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
-  let getOneById = (id, conn) =>
+  let getOneById = (id, connection) =>
     PimpMySql_Query.getOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       id,
-      conn,
+      connection,
     );
-  let getByIdList = (idList, conn) =>
+  let getByIdList = (idList, connection) =>
     PimpMySql_Query.getByIdList(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       idList,
-      conn,
+      connection,
     );
-  let getOneBy = (user, params, conn) =>
+  let getOneBy = (user, params, connection) =>
     PimpMySql_Query.getOneBy(
+      sqlFactory(user),
       Config.decoder,
-      SqlComposer.Select.to_sql(sqlFactory(user)),
       params,
-      conn,
+      connection,
     );
-  let get = (user, params, conn) =>
+  let get = (user, params, connection) =>
     PimpMySql_Query.get(
+      sqlFactory(user),
       Config.decoder,
-      SqlComposer.Select.to_sql(sqlFactory(user)),
       params,
-      conn,
+      connection,
     );
-  let insertOne = (encoder, record, conn) =>
+  let insertOne = (encoder, record, connection) =>
     PimpMySql_Query.insertOne(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       encoder,
       record,
-      conn,
+      connection,
     );
-  let updateOneById = (encoder, record, id, conn) =>
+  let updateOneById = (encoder, record, id, connection) =>
     PimpMySql_Query.updateOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
@@ -54,14 +54,14 @@ module Generator = (Config: Config) => {
       encoder,
       record,
       id,
-      conn,
+      connection,
     );
-  let archiveCompoundOneById = (id, conn) =>
+  let archiveCompoundOneById = (id, connection) =>
     PimpMySql_Query.archiveCompoundOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       id,
-      conn,
+      connection,
     );
 };

@@ -15,15 +15,15 @@ let getByIdList: (
 ) => Js.Promise.t(array('a));
   
 let getOneBy: (
+  SqlComposer.Select.t,
   Js.Json.t => 'a,
-  string,
   Js.Json.t,
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(option('a));
 
 let get: (
+  SqlComposer.Select.t,
   Js.Json.t => 'a,
-  string,
   Js.Json.t,
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(array('a));
