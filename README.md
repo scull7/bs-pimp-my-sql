@@ -62,7 +62,7 @@ type animal = {
 };
 
 module Config = {
-  let t = animal;
+  type t = animal;
   let connection = conn;
   let table = table;
   let decoder = json =>
