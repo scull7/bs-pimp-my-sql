@@ -430,6 +430,12 @@ bs-mysql2@^3.1.0:
   dependencies:
     mysql2 "^1.5.1"
 
+bs-node-debug@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/bs-node-debug/-/bs-node-debug-0.2.0.tgz#50d2d48819af4d40e0585cc35b56dfdeeda4985a"
+  dependencies:
+    debug "^3.1.0"
+
 bs-result@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/bs-result/-/bs-result-1.0.0.tgz#ac163e1384e1529d5f68e1caee16c65ebeb70a98"
