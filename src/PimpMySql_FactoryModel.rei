@@ -24,7 +24,7 @@ module Generator: (Config: Config) => {
     Js.Json.t,
     SqlCommon.Make_sql(MySql2).connection
   ) => Js.Promise.t(array(Config.t));
-  let insert: (
+  let insertOne: (
     Json.Encode.encoder('b),
     'b,
     SqlCommon.Make_sql(MySql2).connection

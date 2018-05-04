@@ -37,8 +37,8 @@ module Generator = (Config: Config) => {
       params,
       conn,
     );
-  let insert = (encoder, record, conn) =>
-    PimpMySql_Query.insert(
+  let insertOne = (encoder, record, conn) =>
+    PimpMySql_Query.insertOne(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,

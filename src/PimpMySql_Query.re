@@ -46,7 +46,7 @@ let get = (decoder, sql, params, conn) => {
      );
 };
 
-let insert = (baseQuery, table, decoder, encoder, record, conn) => {
+let insertOne = (baseQuery, table, decoder, encoder, record, conn) => {
   let params =
     [|record|] |> Json.Encode.array(encoder) |> PimpMySql_Params.positional;
   let sql = {j|INSERT INTO $table SET ?|j};

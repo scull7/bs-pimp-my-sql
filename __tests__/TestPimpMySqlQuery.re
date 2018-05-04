@@ -176,11 +176,11 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("insert (returns 1 result)", () => {
+  testPromise("insertOne (returns 1 result)", () => {
     let record = {type_: "pangolin"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -191,21 +191,21 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("insert (fails and throws unique constraint error)", () => {
+  testPromise("insertOne (fails and throws unique constraint error)", () => {
     let record = {type_: "elephant"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          fail("not an expected result") |> Js.Promise.resolve
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
-  testPromise("insert (fails and throws bad field error)", () => {
+  testPromise("insertOne (fails and throws bad field error)", () => {
     let record = {type_: "flamingo"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )

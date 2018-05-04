@@ -28,7 +28,7 @@ let get: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(array('a));
 
-let insert: (
+let insertOne: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,

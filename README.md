@@ -102,8 +102,9 @@ Everything not checked...
   - [x] _(raw)_ Raw SQL query
   - [ ] _(rawInsert)_ Raw SQL insert
   - [ ] _(rawUpdate)_ Raw SQL update
-  - [ ] INSERT
-    - [x] _(insert)_ basic wrapper
+  - [x] INSERT
+    - [x] _(insertOne)_ basic wrapper
+    - [x] _(insertBatch)_ basic wrapper
   - [ ] UPDATE
     - [x] _(updateOneById)_ Basic wrapper
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
@@ -131,7 +132,8 @@ Everything not checked...
   - [x] Model Creation DSL
   - [x] Query interface
     - [ ] INSERT
-      - [x] _(insert)_
+      - [x] _(insertOne)_
+      - [ ] _(insertBatch)_
       - [ ] Pre-Create intercept
       - [ ] Post-Create intercept
     - [ ] UPDATE
