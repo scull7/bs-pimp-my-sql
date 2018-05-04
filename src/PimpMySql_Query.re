@@ -94,7 +94,7 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
          getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
-         PimpMySql_Error.NotFound("ERROR: updateById failed")
+         PimpMySql_Error.NotFound("ERROR: updateOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }
@@ -115,7 +115,7 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
          getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
-         PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")
+         PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }
