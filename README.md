@@ -55,8 +55,21 @@ let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ~database="e
 
 let table = "animal";
 
+type animal = {
+  id: int,
+  type_: string,
+  deleted: int,
+};
+
 module Config = {
+  let t = animal;
   let table = table;
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
   let base =
     SqlComposer.Select.(
       select
@@ -69,14 +82,7 @@ module Config = {
 
 module Model = PimpMySql.FactoryModel.Generator(Config);
 
-let decoder = json =>
-  Json.Decode.{
-    id: field("id", int, json),
-    type_: field("type_", string, json),
-    deleted: field("deleted", int, json),
-  };
-
-Model.getById(decoder, 1, conn)
+Model.getById(1, conn)
 |> Js.Promise.then_(res =>
      (
        switch (res) {
