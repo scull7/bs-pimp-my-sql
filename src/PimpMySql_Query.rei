@@ -15,20 +15,20 @@ let getByIdList: (
 ) => Js.Promise.t(array('a));
   
 let getOneBy: (
+  SqlComposer.Select.t,
   Js.Json.t => 'a,
-  string,
   Js.Json.t,
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(option('a));
 
 let get: (
+  SqlComposer.Select.t,
   Js.Json.t => 'a,
-  string,
   Js.Json.t,
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(array('a));
 
-let insert: (
+let insertOne: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,
@@ -48,7 +48,7 @@ let insertBatch: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result('c, array('b)));
 
-let updateById: (
+let updateOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,
@@ -58,7 +58,7 @@ let updateById: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
 
-let archiveCompoundById: (
+let archiveCompoundOneById: (
   SqlComposer.Select.t,
   string,
   Js.Json.t => 'a,

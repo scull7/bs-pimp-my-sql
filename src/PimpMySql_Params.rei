@@ -1,3 +1,3 @@
-let named: Js.Json.t => option([> `Named(Js.Json.t) ]);
+let named: Js.Json.t => MySql2.params;
 
-let positional : Js.Json.t => option([> `Positional(Js.Json.t) ]);
+let positional : Js.Json.t => MySql2.params;

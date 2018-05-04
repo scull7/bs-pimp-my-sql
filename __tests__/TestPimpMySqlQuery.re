@@ -1,7 +1,6 @@
 open Jest;
 
-module Sql = SqlCommon.Make_sql(MySql2);
-
+/* Types */
 type animalExternal = {
   id: int,
   type_: string,
@@ -10,7 +9,10 @@ type animalExternal = {
 
 type animalInternal = {type_: string};
 
-let conn = MySql2.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+/* Database Creation and Connection */
+module Sql = SqlCommon.Make_sql(MySql2);
+
+let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqlquery";
 
@@ -27,7 +29,7 @@ let createTable = {j|
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     type_ VARCHAR(120) NOT NULL,
     deleted TINYINT(1) NOT NULL DEFAULT 0,
-    deleted_timestamp TIMESTAMP NULL DEFAULT NULL,
+    deleted_timestamp int(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id),
     unique(type_)
   );
@@ -47,6 +49,7 @@ let createTestData = conn => {
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
 };
 
+/* Model Factory */
 describe("PimpMySql_Query", () => {
   createTestData(conn);
   let decoder = json =>
@@ -107,11 +110,9 @@ describe("PimpMySql_Query", () => {
   );
   testPromise("getOneBy (returns 1 result)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -124,11 +125,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("getOneBy (does not return anything)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.getOneBy(decoder, sql, params, conn)
+    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -141,11 +140,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("get (returns 1 result)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -158,11 +155,9 @@ describe("PimpMySql_Query", () => {
   });
   testPromise("get (does not return anything)", () => {
     let sql =
-      SqlComposer.Select.(
-        base |> where({j|AND $table.`type_` = ?|j}) |> to_sql
-      );
+      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.get(decoder, sql, params, conn)
+    PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -173,11 +168,11 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("insert (returns 1 result)", () => {
+  testPromise("insertOne (returns 1 result)", () => {
     let record = {type_: "pangolin"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -188,21 +183,21 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("insert (fails and throws unique constraint error)", () => {
+  testPromise("insertOne (fails and throws unique constraint error)", () => {
     let record = {type_: "elephant"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          fail("not an expected result") |> Js.Promise.resolve
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
   });
-  testPromise("insert (fails and throws bad field error)", () => {
+  testPromise("insertOne (fails and throws bad field error)", () => {
     let record = {type_: "flamingo"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.insert(base, table, decoder, encoder, record, conn)
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
@@ -277,11 +272,19 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (returns 1 result)", () => {
+  testPromise("updateOneById (returns 1 result)", () => {
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      1,
+      conn,
+    )
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -292,11 +295,19 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (fails and does not return anything)", () => {
+  testPromise("updateOneById (fails and does not return anything)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 9, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      9,
+      conn,
+    )
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -307,18 +318,26 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateById (fails and throws bad field error)", () => {
+  testPromise("updateOneById (fails and throws bad field error)", () => {
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    PimpMySql_Query.updateById(base, table, decoder, encoder, record, 1, conn)
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      1,
+      conn,
+    )
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
-  testPromise("archiveCompoundById (returns 1 result)", () =>
-    PimpMySql_Query.archiveCompoundById(base, table, decoder, 2, conn)
+  testPromise("archiveCompoundOneById (returns 1 result)", () =>
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -329,8 +348,9 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("archiveCompoundById (fails and does not return anything)", () =>
-    PimpMySql_Query.archiveCompoundById(base, table, decoder, 99, conn)
+  testPromise(
+    "archiveCompoundOneById (fails and does not return anything)", () =>
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

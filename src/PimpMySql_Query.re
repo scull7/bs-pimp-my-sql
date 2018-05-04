@@ -9,7 +9,8 @@ let getOneById = (baseQuery, table, decoder, id, conn) => {
     SqlComposer.Select.(
       baseQuery |> where({j|AND $table.`id` = ?|j}) |> to_sql
     );
-  let params = Some(`Positional(Json.Encode.([|int(id)|] |> jsonArray)));
+  let params =
+    Json.Encode.([|int(id)|] |> jsonArray) |> PimpMySql_Params.positional;
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
@@ -29,7 +30,8 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
      );
 };
 
-let getOneBy = (decoder, sql, params, conn) => {
+let getOneBy = (baseQuery, decoder, params, conn) => {
+  let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
@@ -37,7 +39,8 @@ let getOneBy = (decoder, sql, params, conn) => {
      );
 };
 
-let get = (decoder, sql, params, conn) => {
+let get = (baseQuery, decoder, params, conn) => {
+  let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
@@ -45,7 +48,7 @@ let get = (decoder, sql, params, conn) => {
      );
 };
 
-let insert = (baseQuery, table, decoder, encoder, record, conn) => {
+let insertOne = (baseQuery, table, decoder, encoder, record, conn) => {
   let params =
     [|record|] |> Json.Encode.array(encoder) |> PimpMySql_Params.positional;
   let sql = {j|INSERT INTO $table SET ?|j};
@@ -77,7 +80,7 @@ let insertBatch =
        )
   };
 
-let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
+let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
   let params =
     Json.Encode.(
       [|encoder @@ record, int @@ id|]
@@ -91,19 +94,19 @@ let updateById = (baseQuery, table, decoder, encoder, record, id, conn) => {
          getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
-         PimpMySql_Error.NotFound("ERROR: updateById failed")
+         PimpMySql_Error.NotFound("ERROR: updateOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }
      );
 };
 
-let archiveCompoundById = (baseQuery, table, decoder, id, conn) => {
+let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let params =
-    Json.Encode.([|int @@ id|] |> jsonArray |> PimpMySql_Params.positional);
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   let sql = {j|
     UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = NOW()
+    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
     WHERE $table.`id` = ?
   |j};
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
@@ -112,7 +115,7 @@ let archiveCompoundById = (baseQuery, table, decoder, id, conn) => {
          getOneById(baseQuery, table, decoder, id, conn)
          |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
        } else {
-         PimpMySql_Error.NotFound("ERROR: softCompoundDelete failed")
+         PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve;
        }

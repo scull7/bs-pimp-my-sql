@@ -1,47 +1,36 @@
 module type Config = {
+  type t;
+  let connection: SqlCommon.Make_sql(MySql2).connection;
   let table: string;
+  let decoder: Js.Json.t => t;
   let base: SqlComposer.Select.t;
 };
 
 module Generator: (Config: Config) => {
   let getOneById: (
-    Js.Json.t => 'a,
     int,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(option('a));
+  ) => Js.Promise.t(option(Config.t));
   let getByIdList: (
-    Js.Json.t => 'a,
     list(int),
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(array('a));
+  ) => Js.Promise.t(array(Config.t));
   let getOneBy: (
     SqlComposer.Select.t,
-    Js.Json.t => 'a,
     Js.Json.t,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(option('a));
+  ) => Js.Promise.t(option(Config.t));
   let get: (
     SqlComposer.Select.t,
-    Js.Json.t => 'a,
     Js.Json.t,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(array('a));
-  let insert: (
-    Js.Json.t => 'a,
+  ) => Js.Promise.t(array(Config.t));
+  let insertOne: (
     Json.Encode.encoder('b),
     'b,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(option('a));
-  let updateById: (
-    Js.Json.t => 'a,
+  ) => Js.Promise.t(option(Config.t));
+  let updateOneById: (
     Json.Encode.encoder('b),
     'b,
     int,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(Result.result(exn, option('a)));
-  let archiveCompoundById: (
-    Js.Json.t => 'a,
+  ) => Js.Promise.t(Result.result(exn, option(Config.t)));
+  let archiveCompoundOneById: (
     int,
-    SqlCommon.Make_sql(MySql2).connection
-  ) => Js.Promise.t(Result.result(exn, option('a)));
+  ) => Js.Promise.t(Result.result(exn, option(Config.t)));
 };
