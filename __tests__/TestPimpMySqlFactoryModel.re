@@ -52,6 +52,7 @@ let createTestData = conn => {
 /* Model Factory */
 module Config = {
   type t = animal;
+  let connection = conn;
   let table = table;
   let decoder = json =>
     Json.Decode.{
@@ -75,7 +76,7 @@ module Model = PimpMySql_FactoryModel.Generator(Config);
 describe("PimpMySql_FactoryModel", () => {
   createTestData(conn);
   testPromise("getOneById (returns a result)", () =>
-    Model.getOneById(1, conn)
+    Model.getOneById(1)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -87,7 +88,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getOneById (does not return a result)", () =>
-    Model.getOneById(5, conn)
+    Model.getOneById(5)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -99,7 +100,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getByIdList (returns 2 results)", () =>
-    Model.getByIdList([1, 2], conn)
+    Model.getByIdList([1, 2])
     |> Js.Promise.then_(res =>
          (
            /*@TODO: there is a bug with mysql2, once fixed add
@@ -113,7 +114,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getByIdList (does not return any results)", () =>
-    Model.getByIdList([4, 5], conn)
+    Model.getByIdList([4, 5])
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -132,7 +133,7 @@ describe("PimpMySql_FactoryModel", () => {
         |> where({j|AND $table.`type_` = ?|j})
       );
     let params = Json.Encode.([|int(1), string("dog")|] |> jsonArray);
-    Model.getOneBy(userClauses, params, conn)
+    Model.getOneBy(userClauses, params)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -151,7 +152,7 @@ describe("PimpMySql_FactoryModel", () => {
         |> where({j|AND $table.`type_` = ?|j})
       );
     let params = Json.Encode.([|int(1), string("cat")|] |> jsonArray);
-    Model.getOneBy(userClauses, params, conn)
+    Model.getOneBy(userClauses, params)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -170,7 +171,7 @@ describe("PimpMySql_FactoryModel", () => {
         |> where({j|AND $table.`type_` LIKE CONCAT("%", ?, "%")|j})
       );
     let params = Json.Encode.([|int(1), string("a")|] |> jsonArray);
-    Model.get(userClauses, params, conn)
+    Model.get(userClauses, params)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -187,7 +188,7 @@ describe("PimpMySql_FactoryModel", () => {
         select |> where({j|AND $table.`type_` LIKE CONCAT(?, "%")|j})
       );
     let params = Json.Encode.([|string("z")|] |> jsonArray);
-    Model.get(userClauses, params, conn)
+    Model.get(userClauses, params)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -202,7 +203,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "monkey"};
-    Model.insertOne(encoder, record, conn)
+    Model.insertOne(encoder, record)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -217,7 +218,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "dog"};
-    Model.insertOne(encoder, record, conn)
+    Model.insertOne(encoder, record)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
@@ -228,7 +229,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "flamingo"};
-    Model.insertOne(encoder, record, conn)
+    Model.insertOne(encoder, record)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
@@ -238,7 +239,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateOneById(encoder, record, 1, conn)
+    Model.updateOneById(encoder, record, 1)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -253,7 +254,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateOneById(encoder, record, 99, conn)
+    Model.updateOneById(encoder, record, 99)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -269,14 +270,14 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
-    Model.updateOneById(encoder, record, 1, conn)
+    Model.updateOneById(encoder, record, 1)
     |> Js.Promise.then_((_) =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
   testPromise("archiveCompoundOneById (returns 1 result)", () =>
-    Model.archiveCompoundOneById(2, conn)
+    Model.archiveCompoundOneById(2)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -288,7 +289,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("archiveCompoundOneById (does not return a result)", () =>
-    Model.archiveCompoundOneById(99, conn)
+    Model.archiveCompoundOneById(99)
     |> Js.Promise.then_(res =>
          (
            switch (res) {

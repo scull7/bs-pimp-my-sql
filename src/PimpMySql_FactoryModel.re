@@ -1,5 +1,6 @@
 module type Config = {
   type t;
+  let connection: SqlCommon.Make_sql(MySql2).connection;
   let table: string;
   let decoder: Js.Json.t => t;
   let base: SqlComposer.Select.t;
@@ -7,46 +8,46 @@ module type Config = {
 
 module Generator = (Config: Config) => {
   let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
-  let getOneById = (id, connection) =>
+  let getOneById = id =>
     PimpMySql_Query.getOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       id,
-      connection,
+      Config.connection,
     );
-  let getByIdList = (idList, connection) =>
+  let getByIdList = idList =>
     PimpMySql_Query.getByIdList(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       idList,
-      connection,
+      Config.connection,
     );
-  let getOneBy = (user, params, connection) =>
+  let getOneBy = (user, params) =>
     PimpMySql_Query.getOneBy(
       sqlFactory(user),
       Config.decoder,
       params,
-      connection,
+      Config.connection,
     );
-  let get = (user, params, connection) =>
+  let get = (user, params) =>
     PimpMySql_Query.get(
       sqlFactory(user),
       Config.decoder,
       params,
-      connection,
+      Config.connection,
     );
-  let insertOne = (encoder, record, connection) =>
+  let insertOne = (encoder, record) =>
     PimpMySql_Query.insertOne(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       encoder,
       record,
-      connection,
+      Config.connection,
     );
-  let updateOneById = (encoder, record, id, connection) =>
+  let updateOneById = (encoder, record, id) =>
     PimpMySql_Query.updateOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
@@ -54,14 +55,14 @@ module Generator = (Config: Config) => {
       encoder,
       record,
       id,
-      connection,
+      Config.connection,
     );
-  let archiveCompoundOneById = (id, connection) =>
+  let archiveCompoundOneById = id =>
     PimpMySql_Query.archiveCompoundOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,
       id,
-      connection,
+      Config.connection,
     );
 };
