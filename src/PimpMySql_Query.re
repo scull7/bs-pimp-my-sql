@@ -1,6 +1,18 @@
 /* Private */
 module Sql = SqlCommon.Make_sql(MySql2);
 
+let debug = Debug.make("bs-pimp-my-sql", "PimpMySql_Query");
+
+let jsonToString = [%raw "(x) => JSON.stringify(x)"];
+
+let log = (name, sql, params) => {
+  debug("====================");
+  debug(name);
+  debug(sql);
+  debug(jsonToString @@ params);
+  debug("====================");
+};
+
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */
 /* @TODO - there is a bug with mysql2, getByIdList will not work until fixed*/
@@ -11,6 +23,7 @@ let getOneById = (baseQuery, table, decoder, id, conn) => {
     );
   let params =
     Json.Encode.([|int(id)|] |> jsonArray) |> PimpMySql_Params.positional;
+  log("getOneById", sql, params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
@@ -24,6 +37,7 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
     );
   let params =
     Json.Encode.(idList |> list(int)) |> PimpMySql_Params.positional;
+  log("getByIdList", sql, params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
@@ -33,6 +47,7 @@ let getByIdList = (baseQuery, table, decoder, idList, conn) => {
 let getOneBy = (baseQuery, decoder, params, conn) => {
   let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
+  log("getOneBy", sql, params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.oneRow(decoder, result) |> Js.Promise.resolve
@@ -42,6 +57,7 @@ let getOneBy = (baseQuery, decoder, params, conn) => {
 let get = (baseQuery, decoder, params, conn) => {
   let sql = SqlComposer.Select.to_sql(baseQuery);
   let params = PimpMySql_Params.positional(params);
+  log("get", sql, params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(result =>
        PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
@@ -49,9 +65,10 @@ let get = (baseQuery, decoder, params, conn) => {
 };
 
 let insertOne = (baseQuery, table, decoder, encoder, record, conn) => {
+  let sql = {j|INSERT INTO $table SET ?|j};
   let params =
     [|record|] |> Json.Encode.array(encoder) |> PimpMySql_Params.positional;
-  let sql = {j|INSERT INTO $table SET ?|j};
+  log("insertOne", sql, params);
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((_, id)) =>
        getOneById(baseQuery, table, decoder, id, conn)
@@ -81,13 +98,14 @@ let insertBatch =
   };
 
 let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
+  let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
   let params =
     Json.Encode.(
       [|encoder @@ record, int @@ id|]
       |> jsonArray
       |> PimpMySql_Params.positional
     );
-  let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
+  log("updateOneById", sql, params);
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
@@ -102,13 +120,14 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
 };
 
 let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
-  let params =
-    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   let sql = {j|
     UPDATE $table
     SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
     WHERE $table.`id` = ?
   |j};
+  let params =
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
+  log("archiveCompoundOneById", sql, params);
   Sql.Promise.mutate(conn, ~sql, ~params?, ())
   |> Js.Promise.then_(((success, _)) =>
        if (success == 1) {
