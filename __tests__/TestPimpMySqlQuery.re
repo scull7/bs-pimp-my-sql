@@ -353,6 +353,35 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("updateOneById (succeeds but returns no result)", () => {
+    let base =
+      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let record = {type_: "chicken"};
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    PimpMySql_Query.updateOneById(
+      base,
+      table,
+      decoder,
+      encoder,
+      record,
+      1,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("updateOneById (fails and does not return anything)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
