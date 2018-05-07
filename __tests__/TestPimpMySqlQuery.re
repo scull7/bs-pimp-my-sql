@@ -220,6 +220,27 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("insertOne (succeeds but returns no result)", () => {
+    let base =
+      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let record = {type_: "turkey"};
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("insertOne (fails and throws unique constraint error)", () => {
     let record = {type_: "elephant"};
     let encoder = x =>
@@ -398,7 +419,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("delteOneById (returns 1 result)", () =>
+  testPromise("deleteOneById (returns 1 result)", () =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
@@ -410,7 +431,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("delteOneById (fails and does not return anything)", () =>
+  testPromise("deleteOneById (fails and does not return anything)", () =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
