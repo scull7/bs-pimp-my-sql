@@ -435,6 +435,20 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("archiveCompoundOneById (succeeds but returns no result)", () => {
+    let base =
+      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 3, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise(
     "archiveCompoundOneById (fails and does not return anything)", () =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
@@ -453,7 +467,7 @@ describe("PimpMySql_Query", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok({id: 3, type_: "elephant", deleted: 0}) => pass
+           | Result.Ok({id: 3, type_: "elephant", deleted: 1}) => pass
            | _ => fail("not an expected result")
            }
          )
