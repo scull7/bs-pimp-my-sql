@@ -398,6 +398,30 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("delteOneById (returns 1 result)", () =>
+    PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok({id: 3, type_: "elephant", deleted: 0}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("delteOneById (fails and does not return anything)", () =>
+    PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
