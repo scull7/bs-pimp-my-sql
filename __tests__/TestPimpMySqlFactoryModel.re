@@ -386,6 +386,18 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("archiveCompoundOneById (succeeds but returns no result)", () =>
+    Model2.archiveCompoundOneById(3)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   testPromise("archiveCompoundOneById (does not return a result)", () =>
     Model.archiveCompoundOneById(99)
     |> Js.Promise.then_(res =>
@@ -403,7 +415,7 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok({id: 3, type_: "elephant", deleted: 0}) => pass
+           | Result.Ok({id: 3, type_: "elephant", deleted: 1}) => pass
            | _ => fail("not an expected result")
            }
          )
