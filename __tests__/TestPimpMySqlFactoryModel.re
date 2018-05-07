@@ -70,7 +70,30 @@ module Config = {
     );
 };
 
+module Config2 = {
+  type t = animal;
+  let connection = conn;
+  let table = table;
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
+  let base =
+    SqlComposer.Select.(
+      select
+      |> field({j|$table.`id`|j})
+      |> field({j|$table.`type_`|j})
+      |> field({j|$table.`deleted`|j})
+      |> where({j|AND $table.`deleted` = 0|j})
+      |> order_by(`Desc({j|$table.`id`|j}))
+    );
+};
+
 module Model = PimpMySql_FactoryModel.Generator(Config);
+
+module Model2 = PimpMySql_FactoryModel.Generator(Config2);
 
 /* Tests */
 describe("PimpMySql_FactoryModel", () => {
@@ -251,6 +274,25 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("insertOne (succeeds but returns no result)", () => {
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    let record = {type_: "turkey"};
+    Model2.insertOne(encoder, record)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("insertOne (fails and throws unique constraint error)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -337,7 +379,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("delteOneById (returns 1 result)", () =>
+  testPromise("deleteOneById (returns 1 result)", () =>
     Model.deleteOneById(3)
     |> Js.Promise.then_(res =>
          (
@@ -349,7 +391,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("delteOneById (does not return anything)", () =>
+  testPromise("deleteOneById (does not return anything)", () =>
     Model.deleteOneById(3)
     |> Js.Promise.then_(res =>
          (
