@@ -329,6 +329,25 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("updateOneById (succeeds but returns no result)", () => {
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    let record = {type_: "chicken"};
+    Model2.updateOneById(encoder, record, 1)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("updateOneById (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
