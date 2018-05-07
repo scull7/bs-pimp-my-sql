@@ -337,6 +337,30 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("delteOneById (returns 1 result)", () =>
+    Model.deleteOneById(3)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok({id: 3, type_: "elephant", deleted: 0}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("delteOneById (does not return anything)", () =>
+    Model.deleteOneById(3)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, (_) => ());
     MySql2.close(conn);
