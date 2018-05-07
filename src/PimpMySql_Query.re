@@ -142,15 +142,21 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("archiveCompoundOneById", sql, params);
-  Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(((success, _)) =>
-       if (success == 1) {
-         getOneById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
-       } else {
-         PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(_) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) =>
+              getOneById(baseQuery, table, decoder, id, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       | None =>
+         PimpMySql_Error.NotFound("ERROR: deleteById failed")
          |> (x => Result.error(x))
-         |> Js.Promise.resolve;
+         |> Js.Promise.resolve
        }
      );
 };
