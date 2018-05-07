@@ -116,7 +116,8 @@ Everything not checked...
   - [ ] Archive
     - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
     - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-    - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the `ArchiveCompound` and `PrimaryId` interfaces
+    - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the
+          `ArchiveCompound` and `PrimaryId` interfaces
   - [ ] SELECT
     - [ ] Transforms
       - [ ] JSON column parse
@@ -148,7 +149,8 @@ Everything not checked...
     - [ ] Archive
       - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
       - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
-      - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the `ArchiveCompound` and `PrimaryId` interfaces
+      - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the
+            `ArchiveCompound` and `PrimaryId` interfaces
     - [ ] SELECT
       - [ ] Transforms - _(Dependent upon Query Interface implementation)_
       - [x] _(get)_ using the Compositional SQL DSL
