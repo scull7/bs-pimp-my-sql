@@ -120,15 +120,21 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
       |> PimpMySql_Params.positional
     );
   log("updateOneById", sql, params);
-  Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(((success, _)) =>
-       if (success == 1) {
-         getOneById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
-       } else {
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(_) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) =>
+              getOneById(baseQuery, table, decoder, id, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       | None =>
          PimpMySql_Error.NotFound("ERROR: updateOneById failed")
          |> (x => Result.error(x))
-         |> Js.Promise.resolve;
+         |> Js.Promise.resolve
        }
      );
 };
@@ -154,7 +160,7 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
                  )
             )
        | None =>
-         PimpMySql_Error.NotFound("ERROR: deleteById failed")
+         PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve
        }
