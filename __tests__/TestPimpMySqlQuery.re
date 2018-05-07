@@ -169,7 +169,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getWhere (returns 1 result)", () => {
-    let where = [{j|WHERE $table.`type_` = ?|j}];
+    let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -183,7 +183,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getWhere (does not return anything)", () => {
-    let where = [{j|WHERE $table.`type_` = ?|j}];
+    let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |> Js.Promise.then_(res =>

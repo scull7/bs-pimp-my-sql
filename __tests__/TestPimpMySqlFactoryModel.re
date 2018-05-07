@@ -200,7 +200,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("getWhere (returns 1 result)", () => {
-    let userClauses = [{j|WHERE $table.`type_` = ?|j}];
+    let userClauses = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     Model.getWhere(userClauses, params)
     |> Js.Promise.then_(res =>
@@ -214,7 +214,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("getWhere (does not return any results)", () => {
-    let userClauses = [{j|WHERE $table.`type_` = ?|j}];
+    let userClauses = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("mouse")|] |> jsonArray);
     Model.getWhere(userClauses, params)
     |> Js.Promise.then_(res =>

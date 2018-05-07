@@ -65,7 +65,11 @@ let get = (baseQuery, decoder, params, conn) => {
 };
 
 let getWhere = (baseQuery, userQuery, decoder, params, conn) => {
-  let sql = SqlComposer.Select.({...baseQuery, where: userQuery} |> to_sql);
+  let sql =
+    SqlComposer.Select.(
+      {...baseQuery, where: List.concat([userQuery, baseQuery.where])}
+      |> to_sql
+    );
   let params = PimpMySql_Params.positional(params);
   log("getWhere", sql, params);
   Sql.Promise.query(conn, ~sql, ~params?, ())
