@@ -73,4 +73,12 @@ module Generator = (Config: Config) => {
       id,
       Config.connection,
     );
+  let deleteOneById = id =>
+    PimpMySql_Query.deleteOneById(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      Config.decoder,
+      id,
+      Config.connection,
+    );
 };
