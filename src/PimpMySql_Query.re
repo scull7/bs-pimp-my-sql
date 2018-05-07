@@ -174,7 +174,7 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
-  log("deleteById", sql, params);
+  log("deleteOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
   |> Js.Promise.then_(res =>
        switch (res) {
@@ -182,7 +182,7 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
          |> Js.Promise.then_((_) => Js.Promise.resolve(Result.pure(x)))
        | None =>
-         PimpMySql_Error.NotFound("ERROR: deleteById failed")
+         PimpMySql_Error.NotFound("ERROR: deleteOneById failed")
          |> (x => Result.error(x))
          |> Js.Promise.resolve
        }
