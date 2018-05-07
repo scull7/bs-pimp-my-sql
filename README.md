@@ -112,7 +112,7 @@ Everything not checked...
     - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
   - [ ] DELETE
     - [ ] _(delete)_ using a custom where clause
-    - [ ] _(deleteById)_ - must fit the `PrimaryId` interface
+    - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
   - [ ] Archive
     - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
     - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
@@ -145,7 +145,7 @@ Everything not checked...
       - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
     - [ ] DELETE
       - [ ] _(delete)_ using a custom where clause
-      - [ ] _(deleteById)_ - must fit the `PrimaryId` interface
+      - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
     - [ ] Archive
       - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
       - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
