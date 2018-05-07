@@ -73,3 +73,11 @@ let archiveCompoundOneById: (
   int,
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
+
+let deleteOneById: (
+  SqlComposer.Select.t,
+  string,
+  Js.Json.t => 'a,
+  int,
+  SqlCommon.Make_sql(MySql2).connection
+) => Js.Promise.t(Result.result(exn, 'a));
