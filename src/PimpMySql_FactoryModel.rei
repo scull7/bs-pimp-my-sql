@@ -21,6 +21,10 @@ module Generator: (Config: Config) => {
     SqlComposer.Select.t,
     Js.Json.t,
   ) => Js.Promise.t(array(Config.t));
+  let getWhere: (
+    list(string),
+    Js.Json.t,
+  ) => Js.Promise.t(array(Config.t));
   let insertOne: (
     Json.Encode.encoder('b),
     'b,
