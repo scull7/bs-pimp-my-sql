@@ -66,6 +66,15 @@ let updateOneById: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
 
+let archiveCompoundBy: (
+  SqlComposer.Select.t,
+  list(string),
+  string,
+  Js.Json.t => 'a,
+  Js.Json.t,
+  SqlCommon.Make_sql(MySql2).connection
+) => Js.Promise.t(Result.result(exn, array('a)));
+
 let archiveCompoundOneById: (
   SqlComposer.Select.t,
   string,
