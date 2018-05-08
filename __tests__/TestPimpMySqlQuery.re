@@ -168,6 +168,43 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("getWhere (returns 1 result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [|{id: 3, type_: "elephant"}|] => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getWhere (does not return anything)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [||] => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getWhere (fails and throws syntax error exception)", () => {
+    let where = [{j|$table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+  });
   testPromise("insertOne (returns 1 result)", () => {
     let record = {type_: "pangolin"};
     let encoder = x =>

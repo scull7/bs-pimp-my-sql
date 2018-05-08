@@ -64,6 +64,20 @@ let get = (baseQuery, decoder, params, conn) => {
      );
 };
 
+let getWhere = (baseQuery, userQuery, decoder, params, conn) => {
+  let sql =
+    SqlComposer.Select.(
+      {...baseQuery, where: List.concat([userQuery, baseQuery.where])}
+      |> to_sql
+    );
+  let params = PimpMySql_Params.positional(params);
+  log("getWhere", sql, params);
+  Sql.Promise.query(conn, ~sql, ~params?, ())
+  |> Js.Promise.then_(result =>
+       PimpMySql_Decode.rows(decoder, result) |> Js.Promise.resolve
+     );
+};
+
 let insertOne = (baseQuery, table, decoder, encoder, record, conn) => {
   let sql = {j|INSERT INTO $table SET ?|j};
   let params =

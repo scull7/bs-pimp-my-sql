@@ -28,6 +28,14 @@ let get: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(array('a));
 
+let getWhere: (
+  SqlComposer.Select.t,
+  list(string),
+  Js.Json.t => 'a,
+  Js.Json.t,
+  SqlCommon.Make_sql(MySql2).connection
+) => Js.Promise.t(array('a));
+
 let insertOne: (
   SqlComposer.Select.t,
   string,

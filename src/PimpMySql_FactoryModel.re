@@ -38,6 +38,14 @@ module Generator = (Config: Config) => {
       params,
       Config.connection,
     );
+  let getWhere = (user, params) =>
+    PimpMySql_Query.getWhere(
+      sqlFactory(SqlComposer.Select.select),
+      user,
+      Config.decoder,
+      params,
+      Config.connection,
+    );
   let insertOne = (encoder, record) =>
     PimpMySql_Query.insertOne(
       sqlFactory(SqlComposer.Select.select),

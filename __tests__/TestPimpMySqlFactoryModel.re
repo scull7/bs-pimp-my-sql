@@ -199,6 +199,43 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("getWhere (returns 1 result)", () => {
+    let userClauses = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+    Model.getWhere(userClauses, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [|{id: 3, type_: "elephant"}|] => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getWhere (does not return any results)", () => {
+    let userClauses = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("mouse")|] |> jsonArray);
+    Model.getWhere(userClauses, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | [||] => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("getWhere (fails and throws syntax error exception)", () => {
+    let userClauses = [{j|$table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("mouse")|] |> jsonArray);
+    Model.getWhere(userClauses, params)
+    |> Js.Promise.then_((_) =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+  });
   testPromise("insertOne (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
