@@ -139,6 +139,34 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
+let archiveOneById = (baseQuery, table, decoder, id, conn) => {
+  let sql = {j|
+    UPDATE $table
+    SET $table.`deleted` = UNIX_TIMESTAMP()
+    WHERE $table.`id` = ?
+  |j};
+  let params =
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
+  log("archiveOneById", sql, params);
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(_) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) =>
+              getOneById(baseQuery, table, decoder, id, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       | None =>
+         PimpMySql_Error.NotFound("ERROR: archiveOneById failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve
+       }
+     );
+};
+
 let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => {
   let where = String.concat(" ", userQuery);
   let sql = {j|
