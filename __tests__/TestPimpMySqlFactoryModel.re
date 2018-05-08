@@ -37,7 +37,7 @@ let createTable = {j|
 
 let seedTable = {j|
   INSERT INTO $table (type_)
-  VALUES ('dog'), ('cat'), ('elephant');
+  VALUES ('dog'), ('cat'), ('elephant'), ('dogfish'), ('moose');
 |j};
 
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
@@ -111,7 +111,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getOneById (does not return a result)", () =>
-    Model.getOneById(5)
+    Model.getOneById(99)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -137,7 +137,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getByIdList (does not return any results)", () =>
-    Model.getByIdList([4, 5])
+    Model.getByIdList([98, 99])
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -267,7 +267,7 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 4, type_: "monkey"}) => pass
+           | Some({id: 6, type_: "monkey"}) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -373,6 +373,48 @@ describe("PimpMySql_FactoryModel", () => {
          Js.Promise.resolve @@ fail("not an expected result")
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+  });
+  testPromise("archiveCompoundBy (returns 1 result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("dogfish")|] |> jsonArray);
+    Model.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|{id: 4, type_: "dogfish", deleted: 1}|]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (succeeds but returns no results)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("moose")|] |> jsonArray);
+    Model2.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([||]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (does not return a result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    Model.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
   });
   testPromise("archiveCompoundOneById (returns 1 result)", () =>
     Model.archiveCompoundOneById(2)
