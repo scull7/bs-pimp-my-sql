@@ -9,6 +9,12 @@ type animalExternal = {
 
 type animalInternal = {type_: string};
 
+type person = {
+  id: int,
+  first_name: string,
+  deleted: int,
+};
+
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
@@ -17,6 +23,8 @@ let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 let db = "pimpmysqlquery";
 
 let table = "animals";
+
+let table2 = "people";
 
 let createDb = {j|CREATE DATABASE $db;|j};
 
@@ -35,18 +43,36 @@ let createTable = {j|
   );
 |j};
 
+let createTable2 = {j|
+  CREATE TABLE $table2 (
+    id MEDIUMINT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(120) NOT NULL,
+    deleted int(10) UNSIGNED NOT NULL DEFAULT 0,
+    primary key (id)
+  );
+|j};
+
 let seedTable = {j|
   INSERT INTO $table (type_)
   VALUES ('dog'), ('cat'), ('elephant');
 |j};
 
+let seedTable2 = {j|
+  INSERT INTO $table2 (first_name)
+  VALUES ('gayle'), ('patrick'), ('cody'), ('clinton');
+|j};
+
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
+
+let base2 = SqlComposer.Select.(select |> field("*") |> from(table2));
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, (_) => ());
   Sql.mutate(conn, ~sql=useDB, (_) => ());
   Sql.mutate(conn, ~sql=createTable, (_) => ());
   Sql.mutate(conn, ~sql=seedTable, (_) => ());
+  Sql.mutate(conn, ~sql=createTable2, (_) => ());
+  Sql.mutate(conn, ~sql=seedTable2, (_) => ());
 };
 
 /* Model Factory */
@@ -56,6 +82,12 @@ describe("PimpMySql_Query", () => {
     Json.Decode.{
       id: field("id", int, json),
       type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
+  let decoder2 = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      first_name: field("first_name", string, json),
       deleted: field("deleted", int, json),
     };
   testPromise("getOneById (returns 1 result)", () =>
@@ -423,6 +455,46 @@ describe("PimpMySql_Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("archiveOneById (returns 1 result)", () =>
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 2, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(Some({id: 2, first_name: "patrick", deleted: 0})) =>
+             fail("not an expected result")
+           | Result.Ok(Some({id: 2, first_name: "patrick"})) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("archiveOneById (succeeds but returns no result)", () => {
+    let base2 =
+      base2 |> SqlComposer.Select.where({j|AND $table2.`deleted` = 0|j});
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveOneById (fails and does not return anything)", () =>
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   testPromise("archiveCompoundBy (returns 1 result)", () => {
     let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("catfish")|] |> jsonArray);
