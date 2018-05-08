@@ -34,6 +34,9 @@ module Generator: (Config: Config) => {
     'b,
     int,
   ) => Js.Promise.t(Result.result(exn, option(Config.t)));
+  let archiveOneById: (
+    int,
+  ) => Js.Promise.t(Result.result(exn, option(Config.t)));
   let archiveCompoundBy: (
     list(string),
     Js.Json.t,
