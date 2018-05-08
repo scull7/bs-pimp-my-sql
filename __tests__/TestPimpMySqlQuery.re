@@ -423,6 +423,71 @@ describe("PimpMySql_Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("archiveCompoundBy (returns 1 result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("catfish")|] |> jsonArray);
+    PimpMySql_Query.archiveCompoundBy(
+      base,
+      where,
+      table,
+      decoder,
+      params,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|{id: 7, type_: "catfish", deleted: 1}|]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (succeeds but returns no result)", () => {
+    let base =
+      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("lumpsucker")|] |> jsonArray);
+    PimpMySql_Query.archiveCompoundBy(
+      base,
+      where,
+      table,
+      decoder,
+      params,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([||]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (fails and does not return anything)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    PimpMySql_Query.archiveCompoundBy(
+      base,
+      where,
+      table,
+      decoder,
+      params,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("archiveCompoundOneById (returns 1 result)", () =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
     |> Js.Promise.then_(res =>
