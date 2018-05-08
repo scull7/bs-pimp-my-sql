@@ -5,6 +5,7 @@ type animal = {
   id: int,
   type_: string,
   deleted: int,
+  deleted_timestamp: int,
 };
 
 type animalInternal = {type_: string};
@@ -83,6 +84,7 @@ module AnimalConfig = {
       id: field("id", int, json),
       type_: field("type_", string, json),
       deleted: field("deleted", int, json),
+      deleted_timestamp: field("deleted_timestamp", int, json),
     };
   let base =
     SqlComposer.Select.(
@@ -90,6 +92,7 @@ module AnimalConfig = {
       |> field({j|$table.`id`|j})
       |> field({j|$table.`type_`|j})
       |> field({j|$table.`deleted`|j})
+      |> field({j|$table.`deleted_timestamp`|j})
       |> order_by(`Desc({j|$table.`id`|j}))
     );
 };
@@ -103,6 +106,7 @@ module AnimalConfig2 = {
       id: field("id", int, json),
       type_: field("type_", string, json),
       deleted: field("deleted", int, json),
+      deleted_timestamp: field("deleted_timestamp", int, json),
     };
   let base =
     SqlComposer.Select.(
@@ -110,6 +114,7 @@ module AnimalConfig2 = {
       |> field({j|$table.`id`|j})
       |> field({j|$table.`type_`|j})
       |> field({j|$table.`deleted`|j})
+      |> field({j|$table.`deleted_timestamp`|j})
       |> where({j|AND $table.`deleted` = 0|j})
       |> order_by(`Desc({j|$table.`id`|j}))
     );
@@ -486,6 +491,10 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
+           | Result.Ok([|
+               {id: 4, type_: "dogfish", deleted: 1, deleted_timestamp: 0},
+             |]) =>
+             fail("not an expected result")
            | Result.Ok([|{id: 4, type_: "dogfish", deleted: 1}|]) => pass
            | _ => fail("not an expected result")
            }
@@ -526,6 +535,10 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
+           | Result.Ok(
+               Some({id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0}),
+             ) =>
+             fail("not an expected result")
            | Result.Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
            | _ => fail("not an expected result")
            }
@@ -562,6 +575,13 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
+           | Result.Ok({
+               id: 3,
+               type_: "elephant",
+               deleted: 1,
+               deleted_timestamp: 0,
+             }) =>
+             fail("not an expected result")
            | Result.Ok({id: 3, type_: "elephant", deleted: 1}) => pass
            | _ => fail("not an expected result")
            }
