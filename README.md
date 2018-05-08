@@ -116,6 +116,8 @@ Everything not checked...
   - [ ] Archive
     - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
     - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
+    - [x] _(archiveCompoundBy)_ Soft Compound DELETE using a custom where clause - must fit the
+          `ArchiveCompound` interface
     - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the
           `ArchiveCompound` and `PrimaryId` interfaces
   - [ ] SELECT
@@ -149,6 +151,8 @@ Everything not checked...
     - [ ] Archive
       - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
       - [ ] _(archive)_ Soft DELETE a row - must fit the `Archive` interface
+      - [x] _(archiveCompoundBy)_ Soft Compound DELETE using a custom where clause - must fit the
+            `ArchiveCompound` interface
       - [x] _(archiveCompoundOneById)_ Soft Compound DELETE a row using the `id` column - must fit the
             `ArchiveCompound` and `PrimaryId` interfaces
     - [ ] SELECT
