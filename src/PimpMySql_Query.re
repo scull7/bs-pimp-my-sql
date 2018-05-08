@@ -139,6 +139,34 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
      );
 };
 
+let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => {
+  let where = String.concat(" ", userQuery);
+  let sql = {j|
+    UPDATE $table
+    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
+    WHERE 1=1 $where
+  |j};
+  let normalizedParams = PimpMySql_Params.positional(params);
+  log("archiveCompoundBy", sql, params);
+  getWhere(baseQuery, userQuery, decoder, params, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | [||] =>
+         PimpMySql_Error.NotFound("ERROR: archiveCompoundBy failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve
+       | _ =>
+         Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
+         |> Js.Promise.then_((_) =>
+              getWhere(baseQuery, userQuery, decoder, params, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       }
+     );
+};
+
 let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let sql = {j|
     UPDATE $table
