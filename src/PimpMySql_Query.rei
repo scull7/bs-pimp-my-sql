@@ -66,6 +66,14 @@ let updateOneById: (
   SqlCommon.Make_sql(MySql2).connection
 ) => Js.Promise.t(Result.result(exn, option('a)));
 
+let deactivateOneById: (
+  SqlComposer.Select.t,
+  string,
+  Js.Json.t => 'a,
+  int,
+  SqlCommon.Make_sql(MySql2).connection
+) => Js.Promise.t(Result.result(exn, option('a)));
+
 let archiveOneById: (
   SqlComposer.Select.t,
   string,
