@@ -1,6 +1,24 @@
 /* Private */
 module Sql = SqlCommon.Make_sql(MySql2);
 
+let thenMaybeArrayNotFound = (msg, promise) =>
+  promise
+  |> Js.Promise.then_(
+       fun
+       | [||] =>
+         PimpMySql_Error.NotFound(msg) |> Result.error |> Js.Promise.resolve
+       | x => x |> Result.pure |> Js.Promise.resolve,
+     );
+
+let thenMaybeItemNotFound = (msg, promise) =>
+  promise
+  |> Js.Promise.then_(
+       fun
+       | Some(x) => x |> Result.pure |> Js.Promise.resolve
+       | None =>
+         PimpMySql_Error.NotFound(msg) |> Result.error |> Js.Promise.resolve,
+     );
+
 let debug = Debug.make("bs-pimp-my-sql", "PimpMySql_Query");
 
 let jsonToString = [%raw "(x) => JSON.stringify(x)"];
@@ -121,18 +139,13 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
     );
   log("updateOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | Some(_) =>
-         Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) =>
-              getOneById(baseQuery, table, decoder, id, conn)
-            )
-         |> Js.Promise.then_(Result.Promise.pure)
-       | None =>
-         PimpMySql_Error.NotFound("ERROR: updateOneById failed")
-         |> Result.Promise.error
-       }
+  |> thenMaybeItemNotFound("Error: updateOneById failed")
+  |> Result.Promise.andThen((_) =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_((_) =>
+            getOneById(baseQuery, table, decoder, id, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
      );
 };
 
@@ -146,18 +159,13 @@ let deactivateOneById = (baseQuery, table, decoder, id, conn) => {
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("deactivateOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | Some(_) =>
-         Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) =>
-              getOneById(baseQuery, table, decoder, id, conn)
-            )
-         |> Js.Promise.then_(Result.Promise.pure)
-       | None =>
-         PimpMySql_Error.NotFound("ERROR: deactivateOneById failed")
-         |> Result.Promise.error
-       }
+  |> thenMaybeItemNotFound("ERROR: deactivateOneById failed")
+  |> Result.Promise.andThen((_) =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_((_) =>
+            getOneById(baseQuery, table, decoder, id, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
      );
 };
 
@@ -171,18 +179,13 @@ let archiveOneById = (baseQuery, table, decoder, id, conn) => {
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("archiveOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | Some(_) =>
-         Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) =>
-              getOneById(baseQuery, table, decoder, id, conn)
-            )
-         |> Js.Promise.then_(Result.Promise.pure)
-       | None =>
-         PimpMySql_Error.NotFound("ERROR: archiveOneById failed")
-         |> Result.Promise.error
-       }
+  |> thenMaybeItemNotFound("ERROR: archiveOneById failed")
+  |> Result.Promise.andThen((_) =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_((_) =>
+            getOneById(baseQuery, table, decoder, id, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
      );
 };
 
@@ -196,18 +199,13 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
   let normalizedParams = PimpMySql_Params.positional(params);
   log("archiveCompoundBy", sql, params);
   getWhere(baseQuery, userQuery, decoder, params, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | [||] =>
-         PimpMySql_Error.NotFound("ERROR: archiveCompoundBy failed")
-         |> Result.Promise.error
-       | _ =>
-         Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
-         |> Js.Promise.then_((_) =>
-              getWhere(baseQuery, userQuery, decoder, params, conn)
-            )
-         |> Js.Promise.then_(Result.Promise.pure)
-       }
+  |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
+  |> Result.Promise.andThen((_) =>
+       Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
+       |> Js.Promise.then_((_) =>
+            getWhere(baseQuery, userQuery, decoder, params, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
      );
 };
 
@@ -221,19 +219,13 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("archiveCompoundOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | Some(_) =>
-         Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) =>
-              getOneById(baseQuery, table, decoder, id, conn)
-         )
-              |> Js.Promise.then_(Result.Promise.pure
-                 )
-       | None =>
-         PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
-         |> Result.Promise.error
-       }
+  |> thenMaybeItemNotFound("ERROR: archiveCompoundOneById failed")
+  |> Result.Promise.andThen((_) =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_((_) =>
+            getOneById(baseQuery, table, decoder, id, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
      );
 };
 
@@ -246,14 +238,9 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("deleteOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
-  |> Js.Promise.then_(res =>
-       switch (res) {
-       | Some(x) =>
-         Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) => Result.Promise.pure(x))
-       | None =>
-         PimpMySql_Error.NotFound("ERROR: deleteOneById failed")
-         |> Result.Promise.error
-       }
+  |> thenMaybeItemNotFound("ERROR: deleteOneById failed")
+  |> Result.Promise.andThen(x =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_((_) => Result.Promise.pure(x))
      );
 };
