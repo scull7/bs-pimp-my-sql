@@ -65,8 +65,25 @@ module Generator = (Config: Config) => {
       id,
       Config.connection,
     );
+  let archiveCompoundBy = (user, params) =>
+    PimpMySql_Query.archiveCompoundBy(
+      sqlFactory(SqlComposer.Select.select),
+      user,
+      Config.table,
+      Config.decoder,
+      params,
+      Config.connection,
+    );
   let archiveCompoundOneById = id =>
     PimpMySql_Query.archiveCompoundOneById(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      Config.decoder,
+      id,
+      Config.connection,
+    );
+  let deleteOneById = id =>
+    PimpMySql_Query.deleteOneById(
       sqlFactory(SqlComposer.Select.select),
       Config.table,
       Config.decoder,

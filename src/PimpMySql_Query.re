@@ -120,15 +120,49 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
       |> PimpMySql_Params.positional
     );
   log("updateOneById", sql, params);
-  Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(((success, _)) =>
-       if (success == 1) {
-         getOneById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
-       } else {
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(_) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) =>
+              getOneById(baseQuery, table, decoder, id, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       | None =>
          PimpMySql_Error.NotFound("ERROR: updateOneById failed")
          |> (x => Result.error(x))
-         |> Js.Promise.resolve;
+         |> Js.Promise.resolve
+       }
+     );
+};
+
+let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => {
+  let where = String.concat(" ", userQuery);
+  let sql = {j|
+    UPDATE $table
+    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
+    WHERE 1=1 $where
+  |j};
+  let normalizedParams = PimpMySql_Params.positional(params);
+  log("archiveCompoundBy", sql, params);
+  getWhere(baseQuery, userQuery, decoder, params, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | [||] =>
+         PimpMySql_Error.NotFound("ERROR: archiveCompoundBy failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve
+       | _ =>
+         Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
+         |> Js.Promise.then_((_) =>
+              getWhere(baseQuery, userQuery, decoder, params, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
        }
      );
 };
@@ -142,15 +176,43 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
   log("archiveCompoundOneById", sql, params);
-  Sql.Promise.mutate(conn, ~sql, ~params?, ())
-  |> Js.Promise.then_(((success, _)) =>
-       if (success == 1) {
-         getOneById(baseQuery, table, decoder, id, conn)
-         |> Js.Promise.then_(res => Js.Promise.resolve(Result.pure(res)));
-       } else {
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(_) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) =>
+              getOneById(baseQuery, table, decoder, id, conn)
+              |> Js.Promise.then_(res =>
+                   Js.Promise.resolve(Result.pure(res))
+                 )
+            )
+       | None =>
          PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
          |> (x => Result.error(x))
-         |> Js.Promise.resolve;
+         |> Js.Promise.resolve
+       }
+     );
+};
+
+let deleteOneById = (baseQuery, table, decoder, id, conn) => {
+  let sql = {j|
+    DELETE FROM $table
+    WHERE $table.`id` = ?
+  |j};
+  let params =
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
+  log("deleteOneById", sql, params);
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> Js.Promise.then_(res =>
+       switch (res) {
+       | Some(x) =>
+         Sql.Promise.mutate(conn, ~sql, ~params?, ())
+         |> Js.Promise.then_((_) => Js.Promise.resolve(Result.pure(x)))
+       | None =>
+         PimpMySql_Error.NotFound("ERROR: deleteOneById failed")
+         |> (x => Result.error(x))
+         |> Js.Promise.resolve
        }
      );
 };

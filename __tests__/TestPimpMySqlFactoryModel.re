@@ -37,7 +37,7 @@ let createTable = {j|
 
 let seedTable = {j|
   INSERT INTO $table (type_)
-  VALUES ('dog'), ('cat'), ('elephant');
+  VALUES ('dog'), ('cat'), ('elephant'), ('dogfish'), ('moose');
 |j};
 
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
@@ -70,7 +70,30 @@ module Config = {
     );
 };
 
+module Config2 = {
+  type t = animal;
+  let connection = conn;
+  let table = table;
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", string, json),
+      deleted: field("deleted", int, json),
+    };
+  let base =
+    SqlComposer.Select.(
+      select
+      |> field({j|$table.`id`|j})
+      |> field({j|$table.`type_`|j})
+      |> field({j|$table.`deleted`|j})
+      |> where({j|AND $table.`deleted` = 0|j})
+      |> order_by(`Desc({j|$table.`id`|j}))
+    );
+};
+
 module Model = PimpMySql_FactoryModel.Generator(Config);
+
+module Model2 = PimpMySql_FactoryModel.Generator(Config2);
 
 /* Tests */
 describe("PimpMySql_FactoryModel", () => {
@@ -88,7 +111,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getOneById (does not return a result)", () =>
-    Model.getOneById(5)
+    Model.getOneById(99)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -114,7 +137,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("getByIdList (does not return any results)", () =>
-    Model.getByIdList([4, 5])
+    Model.getByIdList([98, 99])
     |> Js.Promise.then_(res =>
          (
            switch (res) {
@@ -244,8 +267,27 @@ describe("PimpMySql_FactoryModel", () => {
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Some({id: 4, type_: "monkey"}) => pass
+           | Some({id: 6, type_: "monkey"}) => pass
            | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insertOne (succeeds but returns no result)", () => {
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    let record = {type_: "turkey"};
+    Model2.insertOne(encoder, record)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | None => pass
+           | Some(_) => fail("not an expected result")
            }
          )
          |> Js.Promise.resolve
@@ -287,6 +329,25 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("updateOneById (succeeds but returns no result)", () => {
+    let encoder = x =>
+      [
+        ("type_", Json.Encode.string @@ x.type_),
+        ("deleted", Json.Encode.int @@ 1),
+      ]
+      |> Json.Encode.object_;
+    let record = {type_: "chicken"};
+    Model2.updateOneById(encoder, record, 1)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("updateOneById (does not return a result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -313,6 +374,48 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("archiveCompoundBy (returns 1 result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("dogfish")|] |> jsonArray);
+    Model.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|{id: 4, type_: "dogfish", deleted: 1}|]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (succeeds but returns no results)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("moose")|] |> jsonArray);
+    Model2.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([||]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (does not return a result)", () => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    Model.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("archiveCompoundOneById (returns 1 result)", () =>
     Model.archiveCompoundOneById(2)
     |> Js.Promise.then_(res =>
@@ -325,8 +428,44 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("archiveCompoundOneById (succeeds but returns no result)", () =>
+    Model2.archiveCompoundOneById(3)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   testPromise("archiveCompoundOneById (does not return a result)", () =>
     Model.archiveCompoundOneById(99)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("deleteOneById (returns 1 result)", () =>
+    Model.deleteOneById(3)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok({id: 3, type_: "elephant", deleted: 1}) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("deleteOneById (does not return anything)", () =>
+    Model.deleteOneById(3)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
