@@ -436,9 +436,9 @@ bs-node-debug@^0.2.0:
   dependencies:
     debug "^3.1.0"
 
-bs-result@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/bs-result/-/bs-result-1.0.0.tgz#ac163e1384e1529d5f68e1caee16c65ebeb70a98"
+bs-result@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/bs-result/-/bs-result-1.1.0.tgz#dcc1e3ca4692ec5fa31df83bf288b5ca2d123e6f"
 
 bs-sql-common@^1.0.1:
   version "1.0.1"
