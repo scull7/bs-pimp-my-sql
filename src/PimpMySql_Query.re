@@ -127,14 +127,11 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
          |> Js.Promise.then_((_) =>
               getOneById(baseQuery, table, decoder, id, conn)
-              |> Js.Promise.then_(res =>
-                   Js.Promise.resolve(Result.pure(res))
-                 )
             )
+         |> Js.Promise.then_(Result.Promise.pure)
        | None =>
          PimpMySql_Error.NotFound("ERROR: updateOneById failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        }
      );
 };
@@ -155,14 +152,11 @@ let deactivateOneById = (baseQuery, table, decoder, id, conn) => {
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
          |> Js.Promise.then_((_) =>
               getOneById(baseQuery, table, decoder, id, conn)
-              |> Js.Promise.then_(res =>
-                   Js.Promise.resolve(Result.pure(res))
-                 )
             )
+         |> Js.Promise.then_(Result.Promise.pure)
        | None =>
          PimpMySql_Error.NotFound("ERROR: deactivateOneById failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        }
      );
 };
@@ -183,14 +177,11 @@ let archiveOneById = (baseQuery, table, decoder, id, conn) => {
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
          |> Js.Promise.then_((_) =>
               getOneById(baseQuery, table, decoder, id, conn)
-              |> Js.Promise.then_(res =>
-                   Js.Promise.resolve(Result.pure(res))
-                 )
             )
+         |> Js.Promise.then_(Result.Promise.pure)
        | None =>
          PimpMySql_Error.NotFound("ERROR: archiveOneById failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        }
      );
 };
@@ -209,16 +200,13 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
        switch (res) {
        | [||] =>
          PimpMySql_Error.NotFound("ERROR: archiveCompoundBy failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        | _ =>
          Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
          |> Js.Promise.then_((_) =>
               getWhere(baseQuery, userQuery, decoder, params, conn)
-              |> Js.Promise.then_(res =>
-                   Js.Promise.resolve(Result.pure(res))
-                 )
             )
+         |> Js.Promise.then_(Result.Promise.pure)
        }
      );
 };
@@ -239,14 +227,12 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
          |> Js.Promise.then_((_) =>
               getOneById(baseQuery, table, decoder, id, conn)
-              |> Js.Promise.then_(res =>
-                   Js.Promise.resolve(Result.pure(res))
+         )
+              |> Js.Promise.then_(Result.Promise.pure
                  )
-            )
        | None =>
          PimpMySql_Error.NotFound("ERROR: archiveCompoundOneById failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        }
      );
 };
@@ -264,11 +250,10 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
        switch (res) {
        | Some(x) =>
          Sql.Promise.mutate(conn, ~sql, ~params?, ())
-         |> Js.Promise.then_((_) => Js.Promise.resolve(Result.pure(x)))
+         |> Js.Promise.then_((_) => Result.Promise.pure(x))
        | None =>
          PimpMySql_Error.NotFound("ERROR: deleteOneById failed")
-         |> (x => Result.error(x))
-         |> Js.Promise.resolve
+         |> Result.Promise.error
        }
      );
 };
