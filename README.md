@@ -113,8 +113,9 @@ Everything not checked...
   - [ ] DELETE
     - [ ] _(delete)_ using a custom where clause
     - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
-  - [ ] Archive
-    - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
+  - [x] Archive
+    - [x] _(deactivateOneById)_ Deactivate a row using the `id` column - must fit the `Activated` and
+          `PrimaryId` interfaces
     - [x] _(archiveOneById)_ Soft DELETE a row using the `id` column - must fit the `Archive` interface
     - [x] _(archiveCompoundBy)_ Soft Compound DELETE using a custom where clause - must fit the
           `ArchiveCompound` interface
@@ -148,8 +149,9 @@ Everything not checked...
     - [ ] DELETE
       - [ ] _(delete)_ using a custom where clause
       - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
-    - [ ] Archive
-      - [ ] _(deactivate)_ Deactivate a row - must fit the `Activated` interface
+    - [x] Archive
+      - [x] _(deactivateOneById)_ Deactivate a row using the `id` column - must fit the `Activated` and
+            `PrimaryId` interfaces
       - [x] _(archiveOneById)_ Soft DELETE a row using the `id` column - must fit the `Archive` interface
       - [x] _(archiveCompoundBy)_ Soft Compound DELETE using a custom where clause - must fit the
             `ArchiveCompound` interface

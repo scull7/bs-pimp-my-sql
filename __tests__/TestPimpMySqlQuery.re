@@ -13,6 +13,7 @@ type animalInternal = {type_: string};
 type person = {
   id: int,
   first_name: string,
+  active: int,
   deleted: int,
 };
 
@@ -48,6 +49,7 @@ let createTable2 = {j|
   CREATE TABLE $table2 (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     first_name VARCHAR(120) NOT NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
     deleted int(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id)
   );
@@ -90,6 +92,7 @@ describe("PimpMySql_Query", () => {
     Json.Decode.{
       id: field("id", int, json),
       first_name: field("first_name", string, json),
+      active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
   testPromise("getOneById (returns 1 result)", () =>
@@ -457,14 +460,56 @@ describe("PimpMySql_Query", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("deactivateOneById (returns 1 result)", () =>
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 2, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(
+               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+             ) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("deactivateOneById (succeeds but returns no result)", () => {
+    let base2 =
+      base2 |> SqlComposer.Select.where({j|AND $table2.`active` = 1|j});
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("deactivateOneById (fails and does not return anything)", () =>
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 99, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   testPromise("archiveOneById (returns 1 result)", () =>
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 2, conn)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(Some({id: 2, first_name: "patrick", deleted: 0})) =>
+           | Result.Ok(
+               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+             ) =>
              fail("not an expected result")
-           | Result.Ok(Some({id: 2, first_name: "patrick"})) => pass
+           | Result.Ok(Some({id: 2, first_name: "patrick", active: 0})) => pass
            | _ => fail("not an expected result")
            }
          )

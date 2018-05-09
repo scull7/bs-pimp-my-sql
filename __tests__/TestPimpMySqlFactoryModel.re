@@ -13,6 +13,7 @@ type animalInternal = {type_: string};
 type person = {
   id: int,
   first_name: string,
+  active: int,
   deleted: int,
 };
 
@@ -48,6 +49,7 @@ let createTable2 = {j|
   CREATE TABLE $table2 (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     first_name VARCHAR(120) NOT NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
     deleted int(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id)
   );
@@ -128,6 +130,7 @@ module PersonConfig = {
     Json.Decode.{
       id: field("id", int, json),
       first_name: field("first_name", string, json),
+      active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
   let base =
@@ -135,6 +138,7 @@ module PersonConfig = {
       select
       |> field({j|$table.`id`|j})
       |> field({j|$table.`first_name`|j})
+      |> field({j|$table.`active`|j})
       |> field({j|$table.`deleted`|j})
     );
 };
@@ -147,6 +151,7 @@ module PersonConfig2 = {
     Json.Decode.{
       id: field("id", int, json),
       first_name: field("first_name", string, json),
+      active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
   let base =
@@ -154,8 +159,10 @@ module PersonConfig2 = {
       select
       |> field({j|$table.`id`|j})
       |> field({j|$table.`first_name`|j})
+      |> field({j|$table.`active`|j})
       |> field({j|$table.`deleted`|j})
       |> where({j|AND $table.`deleted` = 0|j})
+      |> where({j|AND $table.`active` = 1|j})
     );
 };
 
@@ -446,12 +453,52 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
   });
+  testPromise("deactivateOneById (returns 1 result)", () =>
+    PersonModel.deactivateOneById(2)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(
+               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+             ) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("deactivateOneById (succeeds but returns no result)", () =>
+    PersonModel2.deactivateOneById(1)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("deactivateOneById (fails and does not return anything)", () =>
+    PersonModel.deactivateOneById(99)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
   testPromise("archiveOneById (returns 1 result)", () =>
     PersonModel.archiveOneById(2)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
-           | Result.Ok(Some({id: 2, first_name: "patrick", deleted: 0})) =>
+           | Result.Ok(
+               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+             ) =>
              fail("not an expected result")
            | Result.Ok(Some({id: 2, first_name: "patrick"})) => pass
            | _ => fail("not an expected result")
@@ -461,7 +508,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("archiveOneById (succeeds but returns no result)", () =>
-    PersonModel2.archiveOneById(1)
+    PersonModel2.archiveOneById(3)
     |> Js.Promise.then_(res =>
          (
            switch (res) {
