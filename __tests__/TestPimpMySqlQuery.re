@@ -419,7 +419,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateOneById (fails and does not return anything)", () => {
+  testPromise("updateOneById (fails and returns NotFound)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -488,7 +488,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("deactivateOneById (fails and does not return anything)", () =>
+  testPromise("deactivateOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -530,7 +530,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("archiveOneById (fails and does not return anything)", () =>
+  testPromise("archiveOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -662,8 +662,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise(
-    "archiveCompoundOneById (fails and does not return anything)", () =>
+  testPromise("archiveCompoundOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -739,7 +738,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("deleteOneById (fails and does not return anything)", () =>
+  testPromise("deleteOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
