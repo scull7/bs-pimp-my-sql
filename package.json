@@ -1,6 +1,6 @@
 {
   "name": "bs-pimp-my-sql",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "ReasonML rewrite of the Pimp'd out SQL wrapper",
   "scripts": {
     "build": "bsb -make-world",
@@ -47,8 +47,8 @@
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.2",
     "coveralls": "^3.0.0",
-    "jest-cli": "^22.4.3",
     "husky": "^0.14.3",
+    "jest-cli": "^22.4.3",
     "lint-staged": "^7.1.0",
     "nyc": "^11.4.1"
   }
