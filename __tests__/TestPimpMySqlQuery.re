@@ -590,7 +590,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("archiveCompoundBy (fails and does not return anything)", () => {
+  testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
     let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
     PimpMySql_Query.archiveCompoundBy(
@@ -605,6 +605,27 @@ describe("PimpMySql_Query", () => {
          (
            switch (res) {
            | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (fails and returns EmptyUserQuery)", () => {
+    let where = [];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    PimpMySql_Query.archiveCompoundBy(
+      base,
+      where,
+      table,
+      decoder,
+      params,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
            | _ => fail("not an expected result")
            }
          )

@@ -205,8 +205,11 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
   |j};
   let normalizedParams = PimpMySql_Params.positional(params);
   log("archiveCompoundBy", sql, params);
-  getWhere(baseQuery, userQuery, decoder, params, conn)
-  |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
+  checkEmptyUserQuery("ERROR: archiveCompoundBy failed", userQuery)
+  |> Result.Promise.andThen((_) =>
+       getWhere(baseQuery, userQuery, decoder, params, conn)
+       |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
+     )
   |> Result.Promise.andThen((_) =>
        Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
        |> Js.Promise.then_((_) =>

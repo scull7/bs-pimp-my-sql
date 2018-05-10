@@ -577,6 +577,20 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
+  testPromise("archiveCompoundBy (does not return a result)", () => {
+    let where = [];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    AnimalModel.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("archiveCompoundOneById (returns 1 result)", () =>
     AnimalModel.archiveCompoundOneById(2)
     |> Js.Promise.then_(res =>
