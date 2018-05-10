@@ -427,7 +427,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateOneById (does not return a result)", () => {
+  testPromise("updateOneById (fails and returns NotFound)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
@@ -479,7 +479,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("deactivateOneById (fails and does not return anything)", () =>
+  testPromise("deactivateOneById (fails and returns NotFound)", () =>
     PersonModel.deactivateOneById(99)
     |> Js.Promise.then_(res =>
          (
@@ -519,7 +519,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("archiveOneById (fails and does not return anything)", () =>
+  testPromise("archiveOneById (fails and returns NotFound)", () =>
     PersonModel.archiveOneById(99)
     |> Js.Promise.then_(res =>
          (
@@ -563,7 +563,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("archiveCompoundBy (does not return a result)", () => {
+  testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
     let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
     AnimalModel.archiveCompoundBy(where, params)
@@ -571,6 +571,20 @@ describe("PimpMySql_FactoryModel", () => {
          (
            switch (res) {
            | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (fails and returns EmptyUserQuery)", () => {
+    let where = [];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    AnimalModel.archiveCompoundBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -605,7 +619,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("archiveCompoundOneById (does not return a result)", () =>
+  testPromise("archiveCompoundOneById (fails and returns NotFound)", () =>
     AnimalModel.archiveCompoundOneById(99)
     |> Js.Promise.then_(res =>
          (
@@ -617,6 +631,51 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("deleteBy (returns 1 result)", () => {
+    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PersonModel.deleteBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|
+               {id: 2, first_name: "patrick"},
+               {id: 3, first_name: "cody"},
+             |]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("deleteBy (fails and returns NotFound)", () => {
+    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PersonModel.deleteBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("deleteBy (fails and returns EmptyUserQuery)", () => {
+    let where = [];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PersonModel.deleteBy(where, params)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("deleteOneById (returns 1 result)", () =>
     AnimalModel.deleteOneById(3)
     |> Js.Promise.then_(res =>
@@ -636,7 +695,7 @@ describe("PimpMySql_FactoryModel", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("deleteOneById (does not return anything)", () =>
+  testPromise("deleteOneById (fails and returns NotFound)", () =>
     AnimalModel.deleteOneById(3)
     |> Js.Promise.then_(res =>
          (

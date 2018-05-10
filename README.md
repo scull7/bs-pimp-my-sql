@@ -110,8 +110,8 @@ Everything not checked...
     - [x] _(updateOneById)_ Basic wrapper using the `id` column - must fit `PrimaryId` interface
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
     - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
-  - [ ] DELETE
-    - [ ] _(delete)_ using a custom where clause
+  - [x] DELETE
+    - [x] _(deleteBy)_ using a custom where clause
     - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
   - [x] Archive
     - [x] _(deactivateOneById)_ Deactivate a row using the `id` column - must fit the `Activated` and
@@ -146,8 +146,8 @@ Everything not checked...
       - [ ] Pre-Update intercept
       - [ ] Post-Update intercept
       - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
-    - [ ] DELETE
-      - [ ] _(delete)_ using a custom where clause
+    - [x] DELETE
+      - [x] _(deleteBy)_ using a custom where clause
       - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
     - [x] Archive
       - [x] _(deactivateOneById)_ Deactivate a row using the `id` column - must fit the `Activated` and

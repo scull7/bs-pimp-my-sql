@@ -19,6 +19,13 @@ let thenMaybeItemNotFound = (msg, promise) =>
          PimpMySql_Error.NotFound(msg) |> Result.error |> Js.Promise.resolve,
      );
 
+let checkEmptyUserQuery = (msg, arr) =>
+  if (List.length(arr) == 0) {
+    PimpMySql_Error.EmptyUserQuery(msg) |> Result.error |> Js.Promise.resolve;
+  } else {
+    Result.pure(arr) |> Js.Promise.resolve;
+  };
+
 let debug = Debug.make("bs-pimp-my-sql", "PimpMySql_Query");
 
 let jsonToString = [%raw "(x) => JSON.stringify(x)"];
@@ -198,8 +205,11 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
   |j};
   let normalizedParams = PimpMySql_Params.positional(params);
   log("archiveCompoundBy", sql, params);
-  getWhere(baseQuery, userQuery, decoder, params, conn)
-  |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
+  checkEmptyUserQuery("ERROR: archiveCompoundBy failed", userQuery)
+  |> Result.Promise.andThen(x =>
+       getWhere(baseQuery, x, decoder, params, conn)
+       |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
+     )
   |> Result.Promise.andThen((_) =>
        Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
        |> Js.Promise.then_((_) =>
@@ -226,6 +236,25 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
             getOneById(baseQuery, table, decoder, id, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
+     );
+};
+
+let deleteBy = (baseQuery, userQuery, table, decoder, params, conn) => {
+  let where = String.concat(" ", userQuery);
+  let sql = {j|
+    DELETE FROM $table
+    WHERE 1=1 $where
+  |j};
+  let normalizedParams = PimpMySql_Params.positional(params);
+  log("deleteBy", sql, params);
+  checkEmptyUserQuery("ERROR: deleteBy failed", userQuery)
+  |> Result.Promise.andThen(x =>
+       getWhere(baseQuery, x, decoder, params, conn)
+       |> thenMaybeArrayNotFound("ERROR: deleteBy failed")
+     )
+  |> Result.Promise.andThen(x =>
+       Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
+       |> Js.Promise.then_((_) => Result.Promise.pure(x))
      );
 };
 

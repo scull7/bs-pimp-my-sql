@@ -98,6 +98,15 @@ module Generator = (Config: Config) => {
       id,
       Config.connection,
     );
+  let deleteBy = (user, params) =>
+    PimpMySql_Query.deleteBy(
+      sqlFactory(SqlComposer.Select.select),
+      user,
+      Config.table,
+      Config.decoder,
+      params,
+      Config.connection,
+    );
   let deleteOneById = id =>
     PimpMySql_Query.deleteOneById(
       sqlFactory(SqlComposer.Select.select),

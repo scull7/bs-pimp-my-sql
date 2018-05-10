@@ -419,7 +419,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("updateOneById (fails and does not return anything)", () => {
+  testPromise("updateOneById (fails and returns NotFound)", () => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -488,7 +488,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("deactivateOneById (fails and does not return anything)", () =>
+  testPromise("deactivateOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -530,7 +530,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("archiveOneById (fails and does not return anything)", () =>
+  testPromise("archiveOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -590,7 +590,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise("archiveCompoundBy (fails and does not return anything)", () => {
+  testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
     let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
     PimpMySql_Query.archiveCompoundBy(
@@ -605,6 +605,27 @@ describe("PimpMySql_Query", () => {
          (
            switch (res) {
            | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("archiveCompoundBy (fails and returns EmptyUserQuery)", () => {
+    let where = [];
+    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    PimpMySql_Query.archiveCompoundBy(
+      base,
+      where,
+      table,
+      decoder,
+      params,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -641,8 +662,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        );
   });
-  testPromise(
-    "archiveCompoundOneById (fails and does not return anything)", () =>
+  testPromise("archiveCompoundOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
@@ -654,6 +674,51 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
+  testPromise("deleteBy (returns 2 result)", () => {
+    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|
+               {id: 1, first_name: "gayle"},
+               {id: 2, first_name: "patrick"},
+             |]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("deleteBy (fails and returns NotFound)", () => {
+    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("deleteBy (fails and returns EmptyUserQuery)", () => {
+    let where = [];
+    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("deleteOneById (returns 1 result)", () =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
@@ -673,7 +738,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("deleteOneById (fails and does not return anything)", () =>
+  testPromise("deleteOneById (fails and returns NotFound)", () =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
     |> Js.Promise.then_(res =>
          (
