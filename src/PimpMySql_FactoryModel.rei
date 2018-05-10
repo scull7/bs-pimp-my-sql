@@ -47,6 +47,10 @@ module Generator: (Config: Config) => {
   let archiveCompoundOneById: (
     int,
   ) => Js.Promise.t(Result.result(exn, option(Config.t)));
+  let deleteBy: (
+    list(string),
+    Js.Json.t,
+  ) => Js.Promise.t(Result.result(exn, array(Config.t)));
   let deleteOneById: (
     int,
   ) => Js.Promise.t(Result.result(exn, Config.t));
