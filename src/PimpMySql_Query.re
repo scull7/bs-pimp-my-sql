@@ -206,8 +206,8 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
   let normalizedParams = PimpMySql_Params.positional(params);
   log("archiveCompoundBy", sql, params);
   checkEmptyUserQuery("ERROR: archiveCompoundBy failed", userQuery)
-  |> Result.Promise.andThen((_) =>
-       getWhere(baseQuery, userQuery, decoder, params, conn)
+  |> Result.Promise.andThen(x =>
+       getWhere(baseQuery, x, decoder, params, conn)
        |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
      )
   |> Result.Promise.andThen((_) =>
@@ -248,8 +248,8 @@ let deleteBy = (baseQuery, userQuery, table, decoder, params, conn) => {
   let normalizedParams = PimpMySql_Params.positional(params);
   log("deleteBy", sql, params);
   checkEmptyUserQuery("ERROR: deleteBy failed", userQuery)
-  |> Result.Promise.andThen((_) =>
-       getWhere(baseQuery, userQuery, decoder, params, conn)
+  |> Result.Promise.andThen(x =>
+       getWhere(baseQuery, x, decoder, params, conn)
        |> thenMaybeArrayNotFound("ERROR: deleteBy failed")
      )
   |> Result.Promise.andThen(x =>
