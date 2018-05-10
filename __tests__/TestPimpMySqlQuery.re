@@ -654,7 +654,7 @@ describe("PimpMySql_Query", () => {
          |> Js.Promise.resolve
        )
   );
-  testPromise("deleteBy (returns 1 result)", () => {
+  testPromise("deleteBy (returns 2 result)", () => {
     let where = [{j|AND $table2.`deleted` != ?|j}];
     let params = Json.Encode.([|int(0)|] |> jsonArray);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
