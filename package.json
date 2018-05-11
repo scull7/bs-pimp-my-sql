@@ -15,7 +15,7 @@
   },
   "lint-staged": {
     "*.{re,rei}": [
-      "refmt --in-place",
+      "bsrefmt --in-place",
       "git add"
     ]
   },
