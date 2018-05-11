@@ -1,6 +1,5 @@
 module type Config = {
   type t;
-  let connection: SqlCommon.Make_sql(MySql2).connection;
   let table: string;
   let decoder: Js.Json.t => t;
   let base: SqlComposer.Select.t;
@@ -14,7 +13,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       id,
-      Config.connection,
     );
   let getByIdList = idList =>
     PimpMySql_Query.getByIdList(
@@ -22,29 +20,17 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       idList,
-      Config.connection,
     );
   let getOneBy = (user, params) =>
-    PimpMySql_Query.getOneBy(
-      sqlFactory(user),
-      Config.decoder,
-      params,
-      Config.connection,
-    );
+    PimpMySql_Query.getOneBy(sqlFactory(user), Config.decoder, params);
   let get = (user, params) =>
-    PimpMySql_Query.get(
-      sqlFactory(user),
-      Config.decoder,
-      params,
-      Config.connection,
-    );
+    PimpMySql_Query.get(sqlFactory(user), Config.decoder, params);
   let getWhere = (user, params) =>
     PimpMySql_Query.getWhere(
       sqlFactory(SqlComposer.Select.select),
       user,
       Config.decoder,
       params,
-      Config.connection,
     );
   let insertOne = (encoder, record) =>
     PimpMySql_Query.insertOne(
@@ -53,7 +39,6 @@ module Generator = (Config: Config) => {
       Config.decoder,
       encoder,
       record,
-      Config.connection,
     );
   let updateOneById = (encoder, record, id) =>
     PimpMySql_Query.updateOneById(
@@ -63,7 +48,6 @@ module Generator = (Config: Config) => {
       encoder,
       record,
       id,
-      Config.connection,
     );
   let deactivateOneById = id =>
     PimpMySql_Query.deactivateOneById(
@@ -71,7 +55,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       id,
-      Config.connection,
     );
   let archiveOneById = id =>
     PimpMySql_Query.archiveOneById(
@@ -79,7 +62,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       id,
-      Config.connection,
     );
   let archiveCompoundBy = (user, params) =>
     PimpMySql_Query.archiveCompoundBy(
@@ -88,7 +70,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       params,
-      Config.connection,
     );
   let archiveCompoundOneById = id =>
     PimpMySql_Query.archiveCompoundOneById(
@@ -96,7 +77,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       id,
-      Config.connection,
     );
   let deleteBy = (user, params) =>
     PimpMySql_Query.deleteBy(
@@ -105,7 +85,6 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       params,
-      Config.connection,
     );
   let deleteOneById = id =>
     PimpMySql_Query.deleteOneById(
@@ -113,6 +92,5 @@ module Generator = (Config: Config) => {
       Config.table,
       Config.decoder,
       id,
-      Config.connection,
     );
 };
