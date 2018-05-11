@@ -126,7 +126,7 @@ let insertBatch =
       ~columns=Belt_Array.map(columns, Json.Encode.string),
       ~rows=Belt_Array.map(rows, encoder),
     )
-    |> Js.Promise.then_((_) => loader(rows))
+    |> Js.Promise.then_(_ => loader(rows))
     |> Js.Promise.then_(result => Result.pure(result) |> Js.Promise.resolve)
     |> Js.Promise.catch(e =>
          {j|ERROR: $name - $e|j}
@@ -147,9 +147,9 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
   log("updateOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
   |> thenMaybeItemNotFound("Error: updateOneById failed")
-  |> Result.Promise.andThen((_) =>
+  |> Result.Promise.andThen(_ =>
        Sql.Promise.mutate(conn, ~sql, ~params?, ())
-       |> Js.Promise.then_((_) =>
+       |> Js.Promise.then_(_ =>
             getOneById(baseQuery, table, decoder, id, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
@@ -167,9 +167,9 @@ let deactivateOneById = (baseQuery, table, decoder, id, conn) => {
   log("deactivateOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
   |> thenMaybeItemNotFound("ERROR: deactivateOneById failed")
-  |> Result.Promise.andThen((_) =>
+  |> Result.Promise.andThen(_ =>
        Sql.Promise.mutate(conn, ~sql, ~params?, ())
-       |> Js.Promise.then_((_) =>
+       |> Js.Promise.then_(_ =>
             getOneById(baseQuery, table, decoder, id, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
@@ -187,9 +187,9 @@ let archiveOneById = (baseQuery, table, decoder, id, conn) => {
   log("archiveOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
   |> thenMaybeItemNotFound("ERROR: archiveOneById failed")
-  |> Result.Promise.andThen((_) =>
+  |> Result.Promise.andThen(_ =>
        Sql.Promise.mutate(conn, ~sql, ~params?, ())
-       |> Js.Promise.then_((_) =>
+       |> Js.Promise.then_(_ =>
             getOneById(baseQuery, table, decoder, id, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
@@ -210,9 +210,9 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
        getWhere(baseQuery, x, decoder, params, conn)
        |> thenMaybeArrayNotFound("ERROR: archiveCompoundBy failed")
      )
-  |> Result.Promise.andThen((_) =>
+  |> Result.Promise.andThen(_ =>
        Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
-       |> Js.Promise.then_((_) =>
+       |> Js.Promise.then_(_ =>
             getWhere(baseQuery, userQuery, decoder, params, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
@@ -230,9 +230,9 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   log("archiveCompoundOneById", sql, params);
   getOneById(baseQuery, table, decoder, id, conn)
   |> thenMaybeItemNotFound("ERROR: archiveCompoundOneById failed")
-  |> Result.Promise.andThen((_) =>
+  |> Result.Promise.andThen(_ =>
        Sql.Promise.mutate(conn, ~sql, ~params?, ())
-       |> Js.Promise.then_((_) =>
+       |> Js.Promise.then_(_ =>
             getOneById(baseQuery, table, decoder, id, conn)
           )
        |> Js.Promise.then_(Result.Promise.pure)
@@ -254,7 +254,7 @@ let deleteBy = (baseQuery, userQuery, table, decoder, params, conn) => {
      )
   |> Result.Promise.andThen(x =>
        Sql.Promise.mutate(conn, ~sql, ~params=?normalizedParams, ())
-       |> Js.Promise.then_((_) => Result.Promise.pure(x))
+       |> Js.Promise.then_(_ => Result.Promise.pure(x))
      );
 };
 
@@ -270,6 +270,6 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
   |> thenMaybeItemNotFound("ERROR: deleteOneById failed")
   |> Result.Promise.andThen(x =>
        Sql.Promise.mutate(conn, ~sql, ~params?, ())
-       |> Js.Promise.then_((_) => Result.Promise.pure(x))
+       |> Js.Promise.then_(_ => Result.Promise.pure(x))
      );
 };

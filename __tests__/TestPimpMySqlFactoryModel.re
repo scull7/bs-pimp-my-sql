@@ -68,12 +68,12 @@ let seedTable2 = {j|
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
 
 let createTestData = conn => {
-  Sql.mutate(conn, ~sql=createDb, (_) => ());
-  Sql.mutate(conn, ~sql=useDB, (_) => ());
-  Sql.mutate(conn, ~sql=createTable, (_) => ());
-  Sql.mutate(conn, ~sql=seedTable, (_) => ());
-  Sql.mutate(conn, ~sql=createTable2, (_) => ());
-  Sql.mutate(conn, ~sql=seedTable2, (_) => ());
+  Sql.mutate(conn, ~sql=createDb, _ => ());
+  Sql.mutate(conn, ~sql=useDB, _ => ());
+  Sql.mutate(conn, ~sql=createTable, _ => ());
+  Sql.mutate(conn, ~sql=seedTable, _ => ());
+  Sql.mutate(conn, ~sql=createTable2, _ => ());
+  Sql.mutate(conn, ~sql=seedTable2, _ => ());
 };
 
 /* Model Factory */
@@ -331,10 +331,10 @@ describe("PimpMySql_FactoryModel", () => {
     let userClauses = [{j|$table.`type_` = ?|j}];
     let params = Json.Encode.([|string("mouse")|] |> jsonArray);
     AnimalModel.getWhere(userClauses, params, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+    |> Js.Promise.catch(_ => Js.Promise.resolve(pass));
   });
   testPromise("insertOne (returns 1 result)", () => {
     let encoder = x =>
@@ -375,10 +375,10 @@ describe("PimpMySql_FactoryModel", () => {
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "dog"};
     AnimalModel.insertOne(encoder, record, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
   testPromise(
     "insertOne (does not return a result, throws bad field error)", () => {
@@ -386,10 +386,10 @@ describe("PimpMySql_FactoryModel", () => {
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "flamingo"};
     AnimalModel.insertOne(encoder, record, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
   testPromise("updateOneById (returns 1 result)", () => {
     let encoder = x =>
@@ -446,10 +446,10 @@ describe("PimpMySql_FactoryModel", () => {
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record = {type_: "hippopotamus"};
     AnimalModel.updateOneById(encoder, record, 1, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
   testPromise("deactivateOneById (returns 1 result)", () =>
     PersonModel.deactivateOneById(2, conn)
@@ -706,7 +706,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   afterAll(() => {
-    Sql.mutate(conn, ~sql=dropDb, (_) => ());
+    Sql.mutate(conn, ~sql=dropDb, _ => ());
     MySql2.close(conn);
   });
 });

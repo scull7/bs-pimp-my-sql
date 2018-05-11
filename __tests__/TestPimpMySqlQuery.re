@@ -70,12 +70,12 @@ let base = SqlComposer.Select.(select |> field("*") |> from(table));
 let base2 = SqlComposer.Select.(select |> field("*") |> from(table2));
 
 let createTestData = conn => {
-  Sql.mutate(conn, ~sql=createDb, (_) => ());
-  Sql.mutate(conn, ~sql=useDB, (_) => ());
-  Sql.mutate(conn, ~sql=createTable, (_) => ());
-  Sql.mutate(conn, ~sql=seedTable, (_) => ());
-  Sql.mutate(conn, ~sql=createTable2, (_) => ());
-  Sql.mutate(conn, ~sql=seedTable2, (_) => ());
+  Sql.mutate(conn, ~sql=createDb, _ => ());
+  Sql.mutate(conn, ~sql=useDB, _ => ());
+  Sql.mutate(conn, ~sql=createTable, _ => ());
+  Sql.mutate(conn, ~sql=seedTable, _ => ());
+  Sql.mutate(conn, ~sql=createTable2, _ => ());
+  Sql.mutate(conn, ~sql=seedTable2, _ => ());
 };
 
 /* Model Factory */
@@ -237,10 +237,10 @@ describe("PimpMySql_Query", () => {
     let where = [{j|$table.`type_` = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+    |> Js.Promise.catch(_ => Js.Promise.resolve(pass));
   });
   testPromise("insertOne (returns 1 result)", () => {
     let record = {type_: "pangolin"};
@@ -283,20 +283,20 @@ describe("PimpMySql_Query", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          fail("not an expected result") |> Js.Promise.resolve
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve(pass));
+    |> Js.Promise.catch(_ => Js.Promise.resolve(pass));
   });
   testPromise("insertOne (fails and throws bad field error)", () => {
     let record = {type_: "flamingo"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
   testPromise("insertBatch (returns 2 results)", () => {
     let encoder = x =>
@@ -455,10 +455,10 @@ describe("PimpMySql_Query", () => {
       1,
       conn,
     )
-    |> Js.Promise.then_((_) =>
+    |> Js.Promise.then_(_ =>
          Js.Promise.resolve @@ fail("not an expected result")
        )
-    |> Js.Promise.catch((_) => Js.Promise.resolve @@ pass);
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
   testPromise("deactivateOneById (returns 1 result)", () =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 2, conn)
@@ -751,7 +751,7 @@ describe("PimpMySql_Query", () => {
        )
   );
   afterAll(() => {
-    Sql.mutate(conn, ~sql=dropDb, (_) => ());
+    Sql.mutate(conn, ~sql=dropDb, _ => ());
     MySql2.close(conn);
   });
 });
