@@ -61,7 +61,7 @@ let insertBatch:
   (
     ~name: string,
     ~table: string,
-    ~encoder: 'a => Js.Json.t,
+    ~encoder: Json.Encode.encoder('a),
     ~loader: array('a) => Js.Promise.t(array('b)),
     ~error: string => 'c,
     ~columns: array(string),
