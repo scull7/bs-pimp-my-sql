@@ -44,6 +44,17 @@ module Generator = (Config: Config) => {
       record,
       conn,
     );
+  let insertBatch = (name, encoder, loader, error, columns, rows, conn) =>
+    PimpMySql_Query.insertBatch(
+      ~name,
+      ~table=Config.table,
+      ~encoder,
+      ~loader,
+      ~error,
+      ~columns,
+      ~rows,
+      conn,
+    );
   let updateOneById = (encoder, record, id, conn) =>
     PimpMySql_Query.updateOneById(
       sqlFactory(SqlComposer.Select.select),
