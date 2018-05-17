@@ -391,6 +391,84 @@ describe("PimpMySql_FactoryModel", () => {
        )
     |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
   });
+  testPromise("insertBatch (returns 2 results)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let loader = animals => Js.Promise.resolve(animals);
+    let error = msg => msg;
+    let columns = [|"type_"|];
+    let rows = [|{type_: "catfish"}, {type_: "lumpsucker"}|];
+    AnimalModel.insertBatch(
+      "insertBatch test",
+      encoder,
+      loader,
+      error,
+      columns,
+      rows,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insertBatch (fails and throws unique constraint error)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let loader = animals => Js.Promise.resolve(animals);
+    let error = msg => msg;
+    let columns = [|"type_"|];
+    let rows = [|{type_: "dog"}, {type_: "cat"}|];
+    AnimalModel.insertBatch(
+      "insertBatch test",
+      encoder,
+      loader,
+      error,
+      columns,
+      rows,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(_) => pass
+           | Result.Ok(_) => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("insertBatch (given empty array returns nothing)", () => {
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let loader = animals => Js.Promise.resolve(animals);
+    let error = msg => msg;
+    let columns = [|"type_"|];
+    let rows = [||];
+    AnimalModel.insertBatch(
+      "insertBatch test",
+      encoder,
+      loader,
+      error,
+      columns,
+      rows,
+      conn,
+    )
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok([||]) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
   testPromise("updateOneById (returns 1 result)", () => {
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
