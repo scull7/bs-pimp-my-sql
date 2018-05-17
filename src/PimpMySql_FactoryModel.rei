@@ -34,6 +34,17 @@ module Generator:
     let insertOne:
       (Json.Encode.encoder('b), 'b, SqlCommon.Make_sql(MySql2).connection) =>
       Js.Promise.t(option(Config.t));
+    let insertBatch:
+      (
+        string,
+        Json.Encode.encoder('a),
+        array('a) => Js.Promise.t(array('b)),
+        string => 'c,
+        array(string),
+        array('a),
+        SqlCommon.Make_sql(MySql2).connection
+      ) =>
+      Js.Promise.t(Result.result('c, array('b)));
     let updateOneById:
       (
         Json.Encode.encoder('b),
