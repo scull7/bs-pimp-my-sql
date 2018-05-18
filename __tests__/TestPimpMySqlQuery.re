@@ -13,6 +13,7 @@ type animalInternal = {type_: string};
 type person = {
   id: int,
   first_name: string,
+  age: int,
   active: int,
   deleted: int,
 };
@@ -49,8 +50,9 @@ let createTable2 = {j|
   CREATE TABLE $table2 (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     first_name VARCHAR(120) NOT NULL,
+    age TINYINT(3) UNSIGNED NOT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
-    deleted int(10) UNSIGNED NOT NULL DEFAULT 0,
+    deleted INT(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id)
   );
 |j};
@@ -61,8 +63,8 @@ let seedTable = {j|
 |j};
 
 let seedTable2 = {j|
-  INSERT INTO $table2 (first_name)
-  VALUES ('gayle'), ('patrick'), ('cody'), ('clinton');
+  INSERT INTO $table2 (first_name, age)
+  VALUES ('gayle', 28), ('patrick', 65), ('cody', 29), ('clinton', 27);
 |j};
 
 let base = SqlComposer.Select.(select |> field("*") |> from(table));
@@ -92,6 +94,7 @@ describe("PimpMySql_Query", () => {
     Json.Decode.{
       id: field("id", int, json),
       first_name: field("first_name", string, json),
+      age: field("age", int, json),
       active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
@@ -466,7 +469,13 @@ describe("PimpMySql_Query", () => {
          (
            switch (res) {
            | Result.Ok(
-               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+               Some({
+                 id: 2,
+                 first_name: "patrick",
+                 age: 65,
+                 active: 0,
+                 deleted: 0,
+               }),
              ) => pass
            | _ => fail("not an expected result")
            }
@@ -506,10 +515,18 @@ describe("PimpMySql_Query", () => {
          (
            switch (res) {
            | Result.Ok(
-               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+               Some({
+                 id: 2,
+                 first_name: "patrick",
+                 age: 65,
+                 active: 0,
+                 deleted: 0,
+               }),
              ) =>
              fail("not an expected result")
-           | Result.Ok(Some({id: 2, first_name: "patrick", active: 0})) => pass
+           | Result.Ok(
+               Some({id: 2, first_name: "patrick", age: 65, active: 0}),
+             ) => pass
            | _ => fail("not an expected result")
            }
          )
@@ -682,8 +699,8 @@ describe("PimpMySql_Query", () => {
          (
            switch (res) {
            | Result.Ok([|
-               {id: 1, first_name: "gayle"},
-               {id: 2, first_name: "patrick"},
+               {id: 1, first_name: "gayle", age: 28, active: 0},
+               {id: 2, first_name: "patrick", age: 65, active: 0},
              |]) => pass
            | _ => fail("not an expected result")
            }
@@ -749,6 +766,66 @@ describe("PimpMySql_Query", () => {
          )
          |> Js.Promise.resolve
        )
+  );
+  testPromise("incrementOneById (returns 1 result)", () =>
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 4, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(
+               Some({
+                 id: 4,
+                 first_name: "clinton",
+                 age: 28,
+                 active: 1,
+                 deleted: 0,
+               }),
+             ) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("incrementOneById (succeeds but returns no result)", () => {
+    let base2 =
+      base2 |> SqlComposer.Select.where({j|AND $table2.`age` = 29 |j});
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 3, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Ok(None) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       );
+  });
+  testPromise("incrementOneById (fails and returns NotFound)", () =>
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 1, conn)
+    |> Js.Promise.then_(res =>
+         (
+           switch (res) {
+           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
+           | _ => fail("not an expected result")
+           }
+         )
+         |> Js.Promise.resolve
+       )
+  );
+  testPromise("incrementOneById (fails and throws bad field error)", () =>
+    PimpMySql_Query.incrementOneById(
+      base2,
+      table2,
+      decoder2,
+      "badcolumn",
+      3,
+      conn,
+    )
+    |> Js.Promise.then_(_ =>
+         Js.Promise.resolve @@ fail("not an expected result")
+       )
+    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass)
   );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, _ => ());
