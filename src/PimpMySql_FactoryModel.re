@@ -115,4 +115,13 @@ module Generator = (Config: Config) => {
       id,
       conn,
     );
+  let incrementOneById = (field, id, conn) =>
+    PimpMySql_Query.incrementOneById(
+      sqlFactory(SqlComposer.Select.select),
+      Config.table,
+      Config.decoder,
+      field,
+      id,
+      conn,
+    );
 };
