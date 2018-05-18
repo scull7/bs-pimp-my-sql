@@ -71,4 +71,7 @@ module Generator:
     let deleteOneById:
       (int, SqlCommon.Make_sql(MySql2).connection) =>
       Js.Promise.t(Result.result(exn, Config.t));
+    let incrementOneById:
+      (string, int, SqlCommon.Make_sql(MySql2).connection) =>
+      Js.Promise.t(Result.result(exn, option(Config.t)));
   };
