@@ -143,3 +143,14 @@ let deleteOneById:
     SqlCommon.Make_sql(MySql2).connection
   ) =>
   Js.Promise.t(Result.result(exn, 'a));
+
+let incrementOneById:
+  (
+    SqlComposer.Select.t,
+    string,
+    Js.Json.t => 'a,
+    string,
+    int,
+    SqlCommon.Make_sql(MySql2).connection
+  ) =>
+  Js.Promise.t(Result.result(exn, option('a)));
