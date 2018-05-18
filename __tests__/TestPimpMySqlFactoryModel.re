@@ -90,11 +90,11 @@ module AnimalConfig = {
   let base =
     SqlComposer.Select.(
       select
-      |> field({j|$table.`id`|j})
-      |> field({j|$table.`type_`|j})
-      |> field({j|$table.`deleted`|j})
-      |> field({j|$table.`deleted_timestamp`|j})
-      |> order_by(`Desc({j|$table.`id`|j}))
+      |> field({j|$table.id|j})
+      |> field({j|$table.type_|j})
+      |> field({j|$table.deleted|j})
+      |> field({j|$table.deleted_timestamp|j})
+      |> order_by(`Desc({j|$table.id|j}))
     );
 };
 
@@ -111,12 +111,12 @@ module AnimalConfig2 = {
   let base =
     SqlComposer.Select.(
       select
-      |> field({j|$table.`id`|j})
-      |> field({j|$table.`type_`|j})
-      |> field({j|$table.`deleted`|j})
-      |> field({j|$table.`deleted_timestamp`|j})
-      |> where({j|AND $table.`deleted` = 0|j})
-      |> order_by(`Desc({j|$table.`id`|j}))
+      |> field({j|$table.id|j})
+      |> field({j|$table.type_|j})
+      |> field({j|$table.deleted|j})
+      |> field({j|$table.deleted_timestamp|j})
+      |> where({j|AND $table.deleted = 0|j})
+      |> order_by(`Desc({j|$table.id|j}))
     );
 };
 
@@ -134,10 +134,10 @@ module PersonConfig = {
   let base =
     SqlComposer.Select.(
       select
-      |> field({j|$table.`id`|j})
-      |> field({j|$table.`first_name`|j})
-      |> field({j|$table.`active`|j})
-      |> field({j|$table.`deleted`|j})
+      |> field({j|$table.id|j})
+      |> field({j|$table.first_name|j})
+      |> field({j|$table.active|j})
+      |> field({j|$table.deleted|j})
     );
 };
 
@@ -155,12 +155,12 @@ module PersonConfig2 = {
   let base =
     SqlComposer.Select.(
       select
-      |> field({j|$table.`id`|j})
-      |> field({j|$table.`first_name`|j})
-      |> field({j|$table.`active`|j})
-      |> field({j|$table.`deleted`|j})
-      |> where({j|AND $table.`deleted` = 0|j})
-      |> where({j|AND $table.`active` = 1|j})
+      |> field({j|$table.id|j})
+      |> field({j|$table.first_name|j})
+      |> field({j|$table.active|j})
+      |> field({j|$table.deleted|j})
+      |> where({j|AND $table.deleted = 0|j})
+      |> where({j|AND $table.active = 1|j})
     );
 };
 
@@ -229,8 +229,8 @@ describe("PimpMySql_FactoryModel", () => {
     let userClauses =
       SqlComposer.Select.(
         select
-        |> where({j|AND $table.`id` = ?|j})
-        |> where({j|AND $table.`type_` = ?|j})
+        |> where({j|AND $table.id = ?|j})
+        |> where({j|AND $table.type_ = ?|j})
       );
     let params = Json.Encode.([|int(1), string("dog")|] |> jsonArray);
     AnimalModel.getOneBy(userClauses, params, conn)
@@ -248,8 +248,8 @@ describe("PimpMySql_FactoryModel", () => {
     let userClauses =
       SqlComposer.Select.(
         select
-        |> where({j|AND $table.`id` = ?|j})
-        |> where({j|AND $table.`type_` = ?|j})
+        |> where({j|AND $table.id = ?|j})
+        |> where({j|AND $table.type_ = ?|j})
       );
     let params = Json.Encode.([|int(1), string("cat")|] |> jsonArray);
     AnimalModel.getOneBy(userClauses, params, conn)
@@ -267,8 +267,8 @@ describe("PimpMySql_FactoryModel", () => {
     let userClauses =
       SqlComposer.Select.(
         select
-        |> where({j|AND $table.`id` != ?|j})
-        |> where({j|AND $table.`type_` LIKE CONCAT("%", ?, "%")|j})
+        |> where({j|AND $table.id != ?|j})
+        |> where({j|AND $table.type_ LIKE CONCAT("%", ?, "%")|j})
       );
     let params = Json.Encode.([|int(1), string("a")|] |> jsonArray);
     AnimalModel.get(userClauses, params, conn)
@@ -285,7 +285,7 @@ describe("PimpMySql_FactoryModel", () => {
   testPromise("get (does not return any results)", () => {
     let userClauses =
       SqlComposer.Select.(
-        select |> where({j|AND $table.`type_` LIKE CONCAT(?, "%")|j})
+        select |> where({j|AND $table.type_ LIKE CONCAT(?, "%")|j})
       );
     let params = Json.Encode.([|string("z")|] |> jsonArray);
     AnimalModel.get(userClauses, params, conn)
@@ -300,7 +300,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("getWhere (returns 1 result)", () => {
-    let userClauses = [{j|AND $table.`type_` = ?|j}];
+    let userClauses = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     AnimalModel.getWhere(userClauses, params, conn)
     |> Js.Promise.then_(res =>
@@ -314,7 +314,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("getWhere (does not return any results)", () => {
-    let userClauses = [{j|AND $table.`type_` = ?|j}];
+    let userClauses = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("mouse")|] |> jsonArray);
     AnimalModel.getWhere(userClauses, params, conn)
     |> Js.Promise.then_(res =>
@@ -328,7 +328,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("getWhere (fails and throws syntax error exception)", () => {
-    let userClauses = [{j|$table.`type_` = ?|j}];
+    let userClauses = [{j|$table.type_ = ?|j}];
     let params = Json.Encode.([|string("mouse")|] |> jsonArray);
     AnimalModel.getWhere(userClauses, params, conn)
     |> Js.Promise.then_(_ =>
@@ -608,7 +608,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("archiveCompoundBy (returns 1 result)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("dogfish")|] |> jsonArray);
     AnimalModel.archiveCompoundBy(where, params, conn)
     |> Js.Promise.then_(res =>
@@ -626,7 +626,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("archiveCompoundBy (succeeds but returns no results)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("moose")|] |> jsonArray);
     AnimalModel2.archiveCompoundBy(where, params, conn)
     |> Js.Promise.then_(res =>
@@ -640,7 +640,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
     AnimalModel.archiveCompoundBy(where, params, conn)
     |> Js.Promise.then_(res =>
@@ -708,7 +708,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testPromise("deleteBy (returns 1 result)", () => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = [{j|AND $table2.deleted != ?|j}];
     let params = Json.Encode.([|int(0)|] |> jsonArray);
     PersonModel.deleteBy(where, params, conn)
     |> Js.Promise.then_(res =>
@@ -725,7 +725,7 @@ describe("PimpMySql_FactoryModel", () => {
        );
   });
   testPromise("deleteBy (fails and returns NotFound)", () => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = [{j|AND $table2.deleted != ?|j}];
     let params = Json.Encode.([|int(0)|] |> jsonArray);
     PersonModel.deleteBy(where, params, conn)
     |> Js.Promise.then_(res =>
