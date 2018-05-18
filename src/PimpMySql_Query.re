@@ -44,7 +44,7 @@ let log = (name, sql, params) => {
 let getOneById = (baseQuery, table, decoder, id, conn) => {
   let sql =
     SqlComposer.Select.(
-      baseQuery |> where({j|AND $table.`id` = ?|j}) |> to_sql
+      baseQuery |> where({j|AND $table.id = ?|j}) |> to_sql
     );
   let params =
     Json.Encode.([|int(id)|] |> jsonArray) |> PimpMySql_Params.positional;
@@ -58,7 +58,7 @@ let getOneById = (baseQuery, table, decoder, id, conn) => {
 let getByIdList = (baseQuery, table, decoder, idList, conn) => {
   let sql =
     SqlComposer.Select.(
-      baseQuery |> where({j| AND $table.`id` IN (?) |j}) |> to_sql
+      baseQuery |> where({j| AND $table.id IN (?) |j}) |> to_sql
     );
   let params =
     Json.Encode.(idList |> list(int)) |> PimpMySql_Params.positional;
@@ -137,7 +137,7 @@ let insertBatch =
   };
 
 let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
-  let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
+  let sql = {j|UPDATE $table SET ? WHERE $table.id = ?|j};
   let params =
     Json.Encode.(
       [|encoder @@ record, int @@ id|]
@@ -159,8 +159,8 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, conn) => {
 let deactivateOneById = (baseQuery, table, decoder, id, conn) => {
   let sql = {j|
     UPDATE $table
-    SET $table.`active` = 0
-    WHERE $table.`id` = ?
+    SET $table.active = 0
+    WHERE $table.id = ?
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
@@ -179,8 +179,8 @@ let deactivateOneById = (baseQuery, table, decoder, id, conn) => {
 let archiveOneById = (baseQuery, table, decoder, id, conn) => {
   let sql = {j|
     UPDATE $table
-    SET $table.`deleted` = UNIX_TIMESTAMP()
-    WHERE $table.`id` = ?
+    SET $table.deleted = UNIX_TIMESTAMP()
+    WHERE $table.id = ?
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
@@ -200,7 +200,7 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
   let where = String.concat(" ", userQuery);
   let sql = {j|
     UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
+    SET $table.deleted = 1, $table.deleted_timestamp = UNIX_TIMESTAMP()
     WHERE 1=1 $where
   |j};
   let normalizedParams = PimpMySql_Params.positional(params);
@@ -222,8 +222,8 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, conn) => 
 let archiveCompoundOneById = (baseQuery, table, decoder, id, conn) => {
   let sql = {j|
     UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
-    WHERE $table.`id` = ?
+    SET $table.deleted = 1, $table.deleted_timestamp = UNIX_TIMESTAMP()
+    WHERE $table.id = ?
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
@@ -261,7 +261,7 @@ let deleteBy = (baseQuery, userQuery, table, decoder, params, conn) => {
 let deleteOneById = (baseQuery, table, decoder, id, conn) => {
   let sql = {j|
     DELETE FROM $table
-    WHERE $table.`id` = ?
+    WHERE $table.id = ?
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
@@ -276,9 +276,9 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
 
 let incrementOneById = (baseQuery, table, decoder, field, id, conn) => {
   let sql = {j|
-    UPDATE `$table`
-    SET `$field` = `$field` + 1
-    WHERE `$table`.`id` = ?
+    UPDATE $table
+    SET $field = $field + 1
+    WHERE $table.id = ?
   |j};
   let params =
     Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
