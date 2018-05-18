@@ -273,3 +273,23 @@ let deleteOneById = (baseQuery, table, decoder, id, conn) => {
        |> Js.Promise.then_(_ => Result.Promise.pure(x))
      );
 };
+
+let incrementOneById = (baseQuery, table, decoder, field, id, conn) => {
+  let sql = {j|
+    UPDATE `$table`
+    SET `$field` = `$field` + 1
+    WHERE `$table`.`id` = ?
+  |j};
+  let params =
+    Json.Encode.([|int @@ id|] |> jsonArray) |> PimpMySql_Params.positional;
+  log("incrementOneById", sql, params);
+  getOneById(baseQuery, table, decoder, id, conn)
+  |> thenMaybeItemNotFound("ERROR: incrementOneById failed")
+  |> Result.Promise.andThen(_ =>
+       Sql.Promise.mutate(conn, ~sql, ~params?, ())
+       |> Js.Promise.then_(_ =>
+            getOneById(baseQuery, table, decoder, id, conn)
+          )
+       |> Js.Promise.then_(Result.Promise.pure)
+     );
+};
