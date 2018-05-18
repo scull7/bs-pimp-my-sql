@@ -137,7 +137,7 @@ Everything not checked...
   - [x] Query interface
     - [ ] INSERT
       - [x] _(insertOne)_
-      - [ ] _(insertBatch)_
+      - [x] _(insertBatch)_
       - [ ] Pre-Create intercept
       - [ ] Post-Create intercept
     - [ ] UPDATE
