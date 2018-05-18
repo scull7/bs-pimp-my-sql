@@ -108,7 +108,8 @@ Everything not checked...
   - [ ] UPDATE
     - [x] _(updateOneById)_ Basic wrapper using the `id` column - must fit `PrimaryId` interface
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
-    - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
+    - [x] _(incrementOneById)_ increment an integer column using the `id` column - must fit the `Counter`
+          and `PrimaryId` interfaces
   - [x] DELETE
     - [x] _(deleteBy)_ using a custom where clause
     - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
@@ -142,9 +143,10 @@ Everything not checked...
       - [ ] Post-Create intercept
     - [ ] UPDATE
       - [x] _(updateOneById)_ using the `id` column - must fit `PrimaryId` interface
+      - [x] _(incrementOneById)_ increment an integer column using the `id` column - must fit the `Counter`
+            and `PrimaryId` interfaces
       - [ ] Pre-Update intercept
       - [ ] Post-Update intercept
-      - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
     - [x] DELETE
       - [x] _(deleteBy)_ using a custom where clause
       - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
