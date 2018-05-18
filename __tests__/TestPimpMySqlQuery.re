@@ -149,8 +149,7 @@ describe("PimpMySql_Query", () => {
        )
   );
   testPromise("getOneBy (returns 1 result)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
+    let sql = SqlComposer.Select.(base |> where({j|AND $table.type_ = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -164,8 +163,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getOneBy (does not return anything)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
+    let sql = SqlComposer.Select.(base |> where({j|AND $table.type_ = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
     PimpMySql_Query.getOneBy(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -179,8 +177,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("get (returns 1 result)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
+    let sql = SqlComposer.Select.(base |> where({j|AND $table.type_ = ?|j}));
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -194,8 +191,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("get (does not return anything)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
+    let sql = SqlComposer.Select.(base |> where({j|AND $table.type_ = ?|j}));
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
     PimpMySql_Query.get(sql, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -209,7 +205,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getWhere (returns 1 result)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -223,7 +219,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getWhere (does not return anything)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |> Js.Promise.then_(res =>
@@ -237,7 +233,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("getWhere (fails and throws syntax error exception)", () => {
-    let where = [{j|$table.`type_` = ?|j}];
+    let where = [{j|$table.type_ = ?|j}];
     let params = Json.Encode.([|string("elephant")|] |> jsonArray);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |> Js.Promise.then_(_ =>
@@ -261,8 +257,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("insertOne (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let base = base |> SqlComposer.Select.where({j|AND $table.deleted = 0|j});
     let record = {type_: "turkey"};
     let encoder = x =>
       [
@@ -394,8 +389,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("updateOneById (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let base = base |> SqlComposer.Select.where({j|AND $table.deleted = 0|j});
     let record = {type_: "chicken"};
     let encoder = x =>
       [
@@ -485,7 +479,7 @@ describe("PimpMySql_Query", () => {
   );
   testPromise("deactivateOneById (succeeds but returns no result)", () => {
     let base2 =
-      base2 |> SqlComposer.Select.where({j|AND $table2.`active` = 1|j});
+      base2 |> SqlComposer.Select.where({j|AND $table2.active = 1|j});
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 1, conn)
     |> Js.Promise.then_(res =>
          (
@@ -535,7 +529,7 @@ describe("PimpMySql_Query", () => {
   );
   testPromise("archiveOneById (succeeds but returns no result)", () => {
     let base2 =
-      base2 |> SqlComposer.Select.where({j|AND $table2.`deleted` = 0|j});
+      base2 |> SqlComposer.Select.where({j|AND $table2.deleted = 0|j});
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 1, conn)
     |> Js.Promise.then_(res =>
          (
@@ -560,7 +554,7 @@ describe("PimpMySql_Query", () => {
        )
   );
   testPromise("archiveCompoundBy (returns 1 result)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("catfish")|] |> jsonArray);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -585,9 +579,8 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("archiveCompoundBy (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let base = base |> SqlComposer.Select.where({j|AND $table.deleted = 0|j});
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("lumpsucker")|] |> jsonArray);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -608,7 +601,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = [{j|AND $table.type_ = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -666,8 +659,7 @@ describe("PimpMySql_Query", () => {
        )
   );
   testPromise("archiveCompoundOneById (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+    let base = base |> SqlComposer.Select.where({j|AND $table.deleted = 0|j});
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 3, conn)
     |> Js.Promise.then_(res =>
          (
@@ -692,7 +684,7 @@ describe("PimpMySql_Query", () => {
        )
   );
   testPromise("deleteBy (returns 2 result)", () => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = [{j|AND $table2.deleted != ?|j}];
     let params = Json.Encode.([|int(0)|] |> jsonArray);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
     |> Js.Promise.then_(res =>
@@ -709,7 +701,7 @@ describe("PimpMySql_Query", () => {
        );
   });
   testPromise("deleteBy (fails and returns NotFound)", () => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = [{j|AND $table2.deleted != ?|j}];
     let params = Json.Encode.([|int(0)|] |> jsonArray);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
     |> Js.Promise.then_(res =>
@@ -789,7 +781,7 @@ describe("PimpMySql_Query", () => {
   );
   testPromise("incrementOneById (succeeds but returns no result)", () => {
     let base2 =
-      base2 |> SqlComposer.Select.where({j|AND $table2.`age` = 29 |j});
+      base2 |> SqlComposer.Select.where({j|AND $table2.age = 29 |j});
     PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 3, conn)
     |> Js.Promise.then_(res =>
          (
