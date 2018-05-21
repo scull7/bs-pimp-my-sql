@@ -82,7 +82,7 @@ module Config = {
 
 module Model = PimpMySql.FactoryModel.Generator(Config);
 
-Model.getById(1, conn)
+Model.getOneById(1, conn)
 |> Js.Promise.then_(res =>
      (
        switch (res) {
