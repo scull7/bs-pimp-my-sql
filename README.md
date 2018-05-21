@@ -49,6 +49,10 @@ that is not recommended since these files are implementation details.
 
 ### Using the Factory Model.
 
+Below are the requirements necessary to use the FactoryModel. Each requirement is documented
+with examples below.  The requirements include: creating the connection, creating the config,
+and creating the model.
+
 #### Creating the Connection
 
 ```reason
@@ -138,7 +142,7 @@ Model.archiveOneById(1, conn)
 
 *Note: you will notice that some methods will return `Result.Ok(None)`, this means that altering the
 row(s) was a success but fetch the row(s) failed after updating; this is because
-the Model's base query filters our the row(s) after update.
+the Model's base query filters our the row(s) after update.*
 
 ## What's missing?
 
