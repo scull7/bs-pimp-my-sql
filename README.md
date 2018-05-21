@@ -140,9 +140,9 @@ Model.archiveOneById(1, conn)
    );
 ```
 
-*Note: you will notice that some methods will return `Result.Ok(None)`, this means that altering the
-row(s) was a success but fetch the row(s) failed after updating; this is because
-the Model's base query filters our the row(s) after update.*
+*Note: you will notice that some methods will return `Result.Ok(None)`, this means that the row(s)
+were altered successfully but when an attempt to fetch the same row(s) was made the operation failed;
+this is because the Model's base query filters our the row(s) after update.*
 
 ## What's missing?
 
