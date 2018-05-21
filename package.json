@@ -34,7 +34,7 @@
   "author": "Nathan Sculli <scull7@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "bs-platform": "^2.2.3"
+    "bs-platform": "^3.0.0"
   },
   "dependencies": {
     "@glennsl/bs-json": "^2.0.0",
