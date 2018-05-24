@@ -34,10 +34,10 @@
   "author": "Nathan Sculli <scull7@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "bs-platform": "^2.2.3"
+    "bs-platform": "^3.0.0"
   },
   "dependencies": {
-    "@glennsl/bs-json": "^1.2.0",
+    "@glennsl/bs-json": "^2.0.0",
     "bs-mysql2": "^3.1.0",
     "bs-node-debug": "^0.2.0",
     "bs-result": "^1.1.0",
