@@ -8,6 +8,7 @@
     "clean": "bsb -clean-world",
     "coverage": "nyc report --temp-directory=coverage --reporter=text-lcov | coveralls",
     "examples:basic": "node examples/basic.bs.js",
+    "format": "bsrefmt --in-place",
     "install:peers": "yarn add $(jq -r '.peerDependencies|keys|join(\" \")' package.json)",
     "precommit": "lint-staged",
     "test": "yarn run clean; yarn run build; jest --coverage && yarn run coverage",
@@ -15,7 +16,7 @@
   },
   "lint-staged": {
     "*.{re,rei}": [
-      "bsrefmt --in-place",
+      "yarn format",
       "git add"
     ]
   },
