@@ -23,7 +23,8 @@
     "bs-node-debug",
     "bs-result",
     "bs-sql-common",
-    "bs-sql-composer"
+    "bs-sql-composer",
+    "reason-future"
   ],
   "bsc-flags": [ "-bs-super-errors", "-bs-sort-imports" ],
   "refmt": 3
