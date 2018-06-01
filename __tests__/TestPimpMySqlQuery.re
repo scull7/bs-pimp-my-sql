@@ -1,4 +1,5 @@
 open Jest;
+open SqlComposer;
 
 /* Types */
 type animalExternal = {
@@ -65,9 +66,9 @@ let seedTable2 = {j|
   VALUES ('gayle'), ('patrick'), ('cody'), ('clinton');
 |j};
 
-let base = SqlComposer.Select.(select |> field("*") |> from(table));
+let base = Select.(select |. field("*") |. from(table));
 
-let base2 = SqlComposer.Select.(select |> field("*") |> from(table2));
+let base2 = Select.(select |. field("*") |. from(table2));
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, _ => ());
@@ -95,171 +96,141 @@ describe("PimpMySql_Query", () => {
       active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
-  testPromise("getOneById (returns 1 result)", () =>
+  testAsync("getOneById (returns 1 result)", finish =>
     PimpMySql_Query.getOneById(base, table, decoder, 3, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Some({id: 3, type_: "elephant"}) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.mapOk(
+         fun
+         | Some({id: 3, type_: "elephant"}) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("getOneById (does not return anything)", () =>
+  testAsync("getOneById (does not return anything)", finish =>
     PimpMySql_Query.getOneById(base, table, decoder, 4, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Some(_) => fail("not an expected result")
-           | None => pass
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.mapOk(
+         fun
+         | Some(_) => fail("not an expected result") |. finish
+         | None => pass |. finish,
        )
+    |. ignore
   );
-  testPromise("getByIdList (returns 3 results)", () =>
+  Only.testAsync("getByIdList (returns 3 results)", finish =>
     PimpMySql_Query.getByIdList(base, table, decoder, [1, 2], conn)
-    |> Js.Promise.then_(res =>
+    |. Future.mapOk(
+         /**
+       * @TODO: there is a bug with mysql2, once fixed add
+       * fail("expected to get 2 results back") back to the catchall
+       */
          (
-           /*@TODO: there is a bug with mysql2, once fixed add
-             fail("expected to get 2 results back") back to the catchall*/
-           switch (res) {
-           | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] => pass
-           | _ => pass
-           }
-         )
-         |> Js.Promise.resolve
+           fun
+           | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] =>
+             pass |. finish
+           | _ => pass |. finish
+         ),
        )
+    |. Future.mapError(e => {
+         Js.log(e);
+         fail("got error") |. finish;
+       })
+    |. ignore
   );
-  testPromise("getByIdList (does not return anything)", () =>
+  testAsync("getByIdList (does not return anything)", finish =>
     PimpMySql_Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | [||] => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.mapOk(
+         fun
+         | [||] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("getOneBy (returns 1 result)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
-    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
+  testAsync("getOneBy (returns 1 result)", finish => {
+    let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
+    let params = Json.Encode.([|string("elephant")|]);
     PimpMySql_Query.getOneBy(sql, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Some({id: 3, type_: "elephant"}) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("getOneBy (does not return anything)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
-    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Some(_) => fail("not an expected result")
-           | None => pass
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("get (returns 1 result)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
-    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.get(sql, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | [|{id: 3, type_: "elephant"}|] => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("get (does not return anything)", () => {
-    let sql =
-      SqlComposer.Select.(base |> where({j|AND $table.`type_` = ?|j}));
-    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.get(sql, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | [||] => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("getWhere (returns 1 result)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | [|{id: 3, type_: "elephant"}|] => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("getWhere (does not return anything)", () => {
-    let where = [{j|AND $table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("groundhog")|] |> jsonArray);
-    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | [||] => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
-  });
-  testPromise("getWhere (fails and throws syntax error exception)", () => {
-    let where = [{j|$table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("elephant")|] |> jsonArray);
-    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
-    |> Js.Promise.then_(_ =>
-         Js.Promise.resolve @@ fail("not an expected result")
+    |. Future.mapOk(
+         fun
+         | Some({id: 3, type_: "elephant"}) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
-    |> Js.Promise.catch(_ => Js.Promise.resolve(pass));
+    |. ignore;
   });
-  testPromise("insertOne (returns 1 result)", () => {
+  testAsync("getOneBy (does not return anything)", finish => {
+    let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
+    let params = Json.Encode.([|string("groundhog")|]);
+    PimpMySql_Query.getOneBy(sql, decoder, params, conn)
+    |. Future.mapOk(
+         fun
+         | Some(_) => fail("not an expected result") |. finish
+         | None => pass |. finish,
+       )
+    |. ignore;
+  });
+  testAsync("get (returns 1 result)", finish => {
+    let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
+    let params = Json.Encode.([|string("elephant")|]);
+    PimpMySql_Query.get(sql, decoder, params, conn)
+    |. Future.mapOk(
+         fun
+         | [|{id: 3, type_: "elephant"}|] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
+  });
+  testAsync("get (does not return anything)", finish => {
+    let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
+    let params = Json.Encode.([|string("groundhog")|]);
+    PimpMySql_Query.get(sql, decoder, params, conn)
+    |. Future.mapOk(
+         fun
+         | [||] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
+  });
+  testAsync("getWhere (returns 1 result)", finish => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("elephant")|]);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |. Future.mapOk(
+         fun
+         | [|{id: 3, type_: "elephant"}|] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
+  });
+  testAsync("getWhere (does not return anything)", finish => {
+    let where = [{j|AND $table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("groundhog")|]);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |. Future.mapOk(
+         fun
+         | [||] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
+  });
+  testAsync("getWhere (fails and throws syntax error exception)", finish => {
+    let where = [{j|$table.`type_` = ?|j}];
+    let params = Json.Encode.([|string("elephant")|]);
+    PimpMySql_Query.getWhere(base, where, decoder, params, conn)
+    |. Future.mapOk(_ => fail("not an expected result") |. finish)
+    |. Future.mapError(_ => pass |. finish)
+    |. ignore;
+  });
+  testAsync("insertOne (returns 1 result)", finish => {
     let record = {type_: "pangolin"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Some({id: 4, type_: "pangolin"}) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | Some({id: 4, type_: "pangolin"}) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("insertOne (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+  testAsync("insertOne (succeeds but returns no result)", finish => {
+    let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let record = {type_: "turkey"};
     let encoder = x =>
       [
@@ -268,106 +239,93 @@ describe("PimpMySql_Query", () => {
       ]
       |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | None => pass
-           | Some(_) => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | None => pass |. finish
+         | Some(_) => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("insertOne (fails and throws unique constraint error)", () => {
+  testAsync("insertOne (fails and throws unique constraint error)", fin => {
     let record = {type_: "elephant"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_(_ =>
-         fail("not an expected result") |> Js.Promise.resolve
-       )
-    |> Js.Promise.catch(_ => Js.Promise.resolve(pass));
+    |. Future.mapOk(_ => fail("not an expected result") |. fin)
+    |. Future.mapError(_ => pass |. fin)
+    |. ignore;
   });
-  testPromise("insertOne (fails and throws bad field error)", () => {
+  testAsync("insertOne (fails and throws bad field error)", finish => {
     let record = {type_: "flamingo"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     PimpMySql_Query.insertOne(base, table, decoder, encoder, record, conn)
-    |> Js.Promise.then_(_ =>
-         Js.Promise.resolve @@ fail("not an expected result")
-       )
-    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
+    |. Future.mapOk(_ => fail("not an expected result") |. finish)
+    |. Future.mapError(_ => pass |. finish)
+    |. ignore;
   });
-  testPromise("insertBatch (returns 2 results)", () => {
+  testAsync("insertBatch (returns 2 results)", finish => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
-      ~loader=animals => Js.Promise.resolve(animals),
-      ~error=msg => msg,
+      ~loader=animals => Future.value(Belt.Result.Ok(animals)),
+      ~error=msg => PimpMySql_Error.MutationFailure(msg),
       ~columns=[|"type_"|],
       ~rows=[|{type_: "catfish"}, {type_: "lumpsucker"}|],
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Ok([|{type_: "catfish"}, {type_: "lumpsucker"}|]) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("insertBatch (fails and throws unique constraint error)", () => {
+  testAsync("insertBatch (fails and throws unique constraint error)", f => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
-      ~loader=animals => Js.Promise.resolve(animals),
-      ~error=msg => msg,
+      ~loader=animals => Future.value(Belt.Result.Ok(animals)),
+      ~error=msg => PimpMySql_Error.MutationFailure(msg),
       ~columns=[|"type_"|],
       ~rows=[|{type_: "dog"}, {type_: "cat"}|],
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(_) => pass
-           | Result.Ok(_) => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(_) => pass |. f
+         | Belt.Result.Ok(_) => fail("not an expected result") |. f,
+       )
+    |. ignore;
   });
-  testPromise("insertBatch (given empty array returns nothing)", () => {
+  testAsync("insertBatch (given empty array returns nothing)", finish => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
       ~encoder,
-      ~loader=animals => Js.Promise.resolve(animals),
-      ~error=msg => msg,
+      ~loader=animals => Future.value(Belt.Result.Ok(animals)),
+      ~error=msg => PimpMySql_Error.MutationFailure(msg),
       ~columns=[|"type_"|],
       ~rows=[||],
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok([||]) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Ok([||]) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("updateOneById (returns 1 result)", () => {
+  testAsync("updateOneById (returns 1 result)", finish => {
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -380,19 +338,15 @@ describe("PimpMySql_Query", () => {
       1,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(Some({id: 1, type_: "hamster"})) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Ok(Some({id: 1, type_: "hamster"})) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("updateOneById (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+  testAsync("updateOneById (succeeds but returns no result)", finish => {
+    let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let record = {type_: "chicken"};
     let encoder = x =>
       [
@@ -409,17 +363,14 @@ describe("PimpMySql_Query", () => {
       1,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(None) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Ok(None) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("updateOneById (fails and returns NotFound)", () => {
+  testAsync("updateOneById (fails and returns NotFound)", finish => {
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -432,17 +383,14 @@ describe("PimpMySql_Query", () => {
       9,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("updateOneById (fails and throws bad field error)", () => {
+  testAsync("updateOneById (fails and throws bad field error)", finish => {
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -455,96 +403,75 @@ describe("PimpMySql_Query", () => {
       1,
       conn,
     )
-    |> Js.Promise.then_(_ =>
-         Js.Promise.resolve @@ fail("not an expected result")
-       )
-    |> Js.Promise.catch(_ => Js.Promise.resolve @@ pass);
+    |. Future.mapOk(_ => fail("not an expected result") |. finish)
+    |. Future.mapError(_ => pass |. finish)
+    |. ignore;
   });
-  testPromise("deactivateOneById (returns 1 result)", () =>
+  testAsync("deactivateOneById (returns 1 result)", finish =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 2, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(
-               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
-             ) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.mapOk(
+         fun
+         | Some({id: 2, first_name: "patrick", active: 0, deleted: 0}) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("deactivateOneById (succeeds but returns no result)", () => {
-    let base2 =
-      base2 |> SqlComposer.Select.where({j|AND $table2.`active` = 1|j});
+  testAsync("deactivateOneById (succeeds but returns no result)", f => {
+    let base2 = base2 |. Select.where({j|AND $table2.`active` = 1|j});
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 1, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(None) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | None => pass |. f
+         | _ => fail("not an expected result") |. f,
+       )
+    |. ignore;
   });
-  testPromise("deactivateOneById (fails and returns NotFound)", () =>
+  testAsync("deactivateOneById (fails and returns NotFound)", finish =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 99, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("archiveOneById (returns 1 result)", () =>
+  testAsync("archiveOneById (returns 1 result)", finish =>
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 2, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(
-               Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
-             ) =>
-             fail("not an expected result")
-           | Result.Ok(Some({id: 2, first_name: "patrick", active: 0})) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Ok(
+             Some({id: 2, first_name: "patrick", active: 0, deleted: 0}),
+           ) =>
+           fail("not an expected result") |. finish
+         | Belt.Result.Ok(Some({id: 2, first_name: "patrick", active: 0})) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("archiveOneById (succeeds but returns no result)", () => {
-    let base2 =
-      base2 |> SqlComposer.Select.where({j|AND $table2.`deleted` = 0|j});
+  testAsync("archiveOneById (succeeds but returns no result)", finish => {
+    let base2 = base2 |. Select.where({j|AND $table2.`deleted` = 0|j});
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 1, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(None) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | None => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("archiveOneById (fails and returns NotFound)", () =>
+  testAsync("archiveOneById (fails and returns NotFound)", finish =>
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 99, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("archiveCompoundBy (returns 1 result)", () => {
+  testAsync("archiveCompoundBy (returns 1 result)", finish => {
     let where = [{j|AND $table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("catfish")|] |> jsonArray);
+    let params = Json.Encode.([|string("catfish")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
       where,
@@ -553,25 +480,22 @@ describe("PimpMySql_Query", () => {
       params,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok([|
-               {id: 7, type_: "catfish", deleted: 1, deleted_timestamp: 0},
-             |]) =>
-             fail("not an expected result")
-           | Result.Ok([|{id: 7, type_: "catfish", deleted: 1}|]) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Ok([|
+             {id: 7, type_: "catfish", deleted: 1, deleted_timestamp: 0},
+           |]) =>
+           fail("not an expected result") |. finish
+         | Belt.Result.Ok([|{id: 7, type_: "catfish", deleted: 1}|]) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("archiveCompoundBy (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+  testAsync("archiveCompoundBy (succeeds but returns no result)", finish => {
+    let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let where = [{j|AND $table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("lumpsucker")|] |> jsonArray);
+    let params = Json.Encode.([|string("lumpsucker")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
       where,
@@ -580,19 +504,16 @@ describe("PimpMySql_Query", () => {
       params,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok([||]) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | [||] => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("archiveCompoundBy (fails and returns NotFound)", () => {
+  testAsync("archiveCompoundBy (fails and returns NotFound)", finish => {
     let where = [{j|AND $table.`type_` = ?|j}];
-    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    let params = Json.Encode.([|string("blahblahblah")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
       where,
@@ -601,19 +522,16 @@ describe("PimpMySql_Query", () => {
       params,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("archiveCompoundBy (fails and returns EmptyUserQuery)", () => {
+  testAsync("archiveCompoundBy (fails and returns EmptyUserQuery)", fin => {
     let where = [];
-    let params = Json.Encode.([|string("blahblahblah")|] |> jsonArray);
+    let params = Json.Encode.([|string("blahblahblah")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
       where,
@@ -622,133 +540,100 @@ describe("PimpMySql_Query", () => {
       params,
       conn,
     )
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass |. fin
+         | _ => fail("not an expected result") |. fin,
+       )
+    |. ignore;
   });
-  testPromise("archiveCompoundOneById (returns 1 result)", () =>
+  testAsync("archiveCompoundOneById (returns 1 result)", finish =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(
-               Some({id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0}),
-             ) =>
-             fail("not an expected result")
-           | Result.Ok(Some({id: 2, type_: "cat", deleted: 1})) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.mapOk(
+         fun
+         | {id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0} =>
+           fail("not an expected result") |. finish
+         | {id: 2, type_: "cat", deleted: 1} => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("archiveCompoundOneById (succeeds but returns no result)", () => {
-    let base =
-      base |> SqlComposer.Select.where({j|AND $table.`deleted` = 0|j});
+  testAsync("archiveCompoundOneById (succeeds but returns no result)", f => {
+    let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 3, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok(None) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(_ => pass |. f)
+    |. Future.mapError(_ => fail("not an expected result") |. f)
+    |. ignore;
   });
-  testPromise("archiveCompoundOneById (fails and returns NotFound)", () =>
+  testAsync("archiveCompoundOneById (fails and returns NotFound)", finish =>
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("deleteBy (returns 2 result)", () => {
+  testAsync("deleteBy (returns 2 result)", finish => {
     let where = [{j|AND $table2.`deleted` != ?|j}];
-    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    let params = Json.Encode.([|int(0)|]);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok([|
-               {id: 1, first_name: "gayle"},
-               {id: 2, first_name: "patrick"},
-             |]) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.mapOk(
+         fun
+         | [|{id: 1, first_name: "gayle"}, {id: 2, first_name: "patrick"}|] =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("deleteBy (fails and returns NotFound)", () => {
+  testAsync("deleteBy (fails and returns NotFound)", finish => {
     let where = [{j|AND $table2.`deleted` != ?|j}];
-    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    let params = Json.Encode.([|int(0)|]);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("deleteBy (fails and returns EmptyUserQuery)", () => {
+  testAsync("deleteBy (fails and returns EmptyUserQuery)", finish => {
     let where = [];
-    let params = Json.Encode.([|int(0)|] |> jsonArray);
+    let params = Json.Encode.([|int(0)|]);
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.EmptyUserQuery(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
-       );
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.EmptyUserQuery(_)) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
+       )
+    |. ignore;
   });
-  testPromise("deleteOneById (returns 1 result)", () =>
+  testAsync("deleteOneById (returns 1 result)", finish =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Ok({
-               id: 3,
-               type_: "elephant",
-               deleted: 1,
-               deleted_timestamp: 0,
-             }) =>
-             fail("not an expected result")
-           | Result.Ok({id: 3, type_: "elephant", deleted: 1}) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Ok({
+             id: 3,
+             type_: "elephant",
+             deleted: 1,
+             deleted_timestamp: 0,
+           }) =>
+           fail("not an expected result") |. finish
+         | Belt.Result.Ok({id: 3, type_: "elephant", deleted: 1}) =>
+           pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
-  testPromise("deleteOneById (fails and returns NotFound)", () =>
+  testAsync("deleteOneById (fails and returns NotFound)", finish =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
-    |> Js.Promise.then_(res =>
-         (
-           switch (res) {
-           | Result.Error(PimpMySql_Error.NotFound(_)) => pass
-           | _ => fail("not an expected result")
-           }
-         )
-         |> Js.Promise.resolve
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | _ => fail("not an expected result") |. finish,
        )
+    |. ignore
   );
   afterAll(() => {
     Sql.mutate(conn, ~sql=dropDb, _ => ());
