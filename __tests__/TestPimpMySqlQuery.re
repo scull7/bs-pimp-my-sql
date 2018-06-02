@@ -18,6 +18,13 @@ type person = {
   deleted: int,
 };
 
+let logAndFail = (label, x) => {
+  Js.log2({j|ERROR: $label -|j}, x);
+  fail("not an expected response");
+};
+
+let logAndFailAsync = (label, x, finish) => logAndFail(label, x) |. finish;
+
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
@@ -114,35 +121,35 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
-  Only.testAsync("getByIdList (returns 3 results)", finish =>
-    PimpMySql_Query.getByIdList(base, table, decoder, [1, 2], conn)
-    |. Future.mapOk(
-         /**
-       * @TODO: there is a bug with mysql2, once fixed add
-       * fail("expected to get 2 results back") back to the catchall
-       */
-         (
-           fun
-           | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] =>
-             pass |. finish
-           | _ => pass |. finish
-         ),
-       )
-    |. Future.mapError(e => {
-         Js.log(e);
-         fail("got error") |. finish;
-       })
-    |. ignore
-  );
-  testAsync("getByIdList (does not return anything)", finish =>
-    PimpMySql_Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
-    |. Future.mapOk(
-         fun
-         | [||] => pass |. finish
-         | _ => fail("not an expected result") |. finish,
-       )
-    |. ignore
-  );
+  /**
+   * @TODO - bs-sql-common query_batch method needs to be implemented before
+   *         this will work.
+   */
+  /*
+   Only.testAsync("getByIdList (returns 3 results)", (finish) =>
+     PimpMySql_Query.getByIdList(base, table, decoder, [1, 2], conn)
+     |. Future.mapOk(
+       /**
+        * @TODO: there is a bug with mysql2, once fixed add
+        * fail("expected to get 2 results back") back to the catchall
+        */
+       fun
+       | [|{id: 1, type_: "dog"}, {id: 2, type_: "cat"}|] => pass |. finish
+       | _ => pass |. finish
+     )
+     |. Future.mapError(e => { Js.log(e); fail("got error") |. finish })
+     |. ignore
+   );
+   testAsync("getByIdList (does not return anything)", (finish) =>
+     PimpMySql_Query.getByIdList(base, table, decoder, [6, 7, 8], conn)
+     |. Future.mapOk(
+       fun
+       | [||] => pass |. finish
+       | _ => fail("not an expected result") |. finish
+     )
+     |. ignore
+   );
+   */
   testAsync("getOneBy (returns 1 result)", finish => {
     let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|]);
@@ -465,7 +472,7 @@ describe("PimpMySql_Query", () => {
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
-         | _ => fail("not an expected result") |. finish,
+         | x => logAndFailAsync("archiveOneById", x, finish),
        )
     |. ignore
   );
@@ -511,7 +518,8 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
-  testAsync("archiveCompoundBy (fails and returns NotFound)", finish => {
+  testAsync(
+    "archiveCompoundBy (fails and returns UnexpectedEmptyArray)", finish => {
     let where = [{j|AND $table.`type_` = ?|j}];
     let params = Json.Encode.([|string("blahblahblah")|]);
     PimpMySql_Query.archiveCompoundBy(
@@ -524,7 +532,8 @@ describe("PimpMySql_Query", () => {
     )
     |. Future.map(
          fun
-         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | Belt.Result.Error(PimpMySql_Error.UnexpectedEmptyArray(_)) =>
+           pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
     |. ignore;
@@ -551,10 +560,10 @@ describe("PimpMySql_Query", () => {
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
     |. Future.mapOk(
          fun
-         | {id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0} =>
-           fail("not an expected result") |. finish
-         | {id: 2, type_: "cat", deleted: 1} => pass |. finish
-         | _ => fail("not an expected result") |. finish,
+         | Some({id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0} as x) =>
+           logAndFailAsync("archiveCompoundOneById - 1", x, finish)
+         | Some({id: 2, type_: "cat", deleted: 1}) => pass |. finish
+         | x => logAndFailAsync("archiveCompoundOneById - 2", x, finish),
        )
     |. ignore
   );
@@ -592,8 +601,12 @@ describe("PimpMySql_Query", () => {
     PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
     |. Future.map(
          fun
-         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
-         | _ => fail("not an expected result") |. finish,
+         | Belt.Result.Error(PimpMySql_Error.UnexpectedEmptyArray(_)) =>
+           pass |. finish
+         | x => {
+             Js.log2("ERROR: deleteBy", x);
+             fail("not an expected result") |. finish;
+           },
        )
     |. ignore;
   });

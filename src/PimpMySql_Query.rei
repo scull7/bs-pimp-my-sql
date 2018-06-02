@@ -8,15 +8,21 @@ let getOneById:
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
-let getByIdList:
-  (
-    SqlComposer.Select.t,
-    string,
-    Js.Json.t => 'a,
-    list(int),
-    SqlCommon.Make_sql(MySql2).connection
-  ) =>
-  Future.t(Belt.Result.t(array('a), exn));
+/**
+ * @TODO - bs-sql-common query_batch method needs to be implemented before
+ *         this will work.
+ */
+/*
+ let getByIdList:
+   (
+     SqlComposer.Select.t,
+     string,
+     Js.Json.t => 'a,
+     list(int),
+     SqlCommon.Make_sql(MySql2).connection
+   ) =>
+   Future.t(Belt.Result.t(array('a), exn));
+ */
 
 let getOneBy:
   (
@@ -121,7 +127,7 @@ let archiveCompoundOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Future.t(Belt.Result.t('a, exn));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let deleteBy:
   (

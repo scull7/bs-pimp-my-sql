@@ -68,14 +68,20 @@ let getOneById = (baseQuery, table, decoder, id, db) =>
     db,
   );
 
-let getByIdList = (baseQuery, table, decoder, idList, db) =>
-  queryMany(
-    "getByIdList",
-    decoder,
-    Select.(baseQuery |. where({j| AND $table.`id` IN (?) |j}) |. to_sql),
-    Json.Encode.([|idList |> list(int)|]) |> Params.positional,
-    db,
-  );
+/**
+ * @TODO - bs-sql-common query_batch method needs to be implemented before
+ *         this will work.
+ */
+/*
+ let getByIdList = (baseQuery, table, decoder, idList, db) =>
+   queryMany(
+     "getByIdList",
+     decoder,
+     Select.(baseQuery |. where({j| AND $table.`id` IN (?) |j}) |. to_sql),
+     Json.Encode.([| list(int, idList) |]) |> Params.positional,
+     db,
+   );
+ */
 
 let getOneBy = (baseQuery, decoder, params, db) =>
   queryOne(
@@ -138,7 +144,9 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, db) => {
   let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
   let params =
     Json.Encode.([|encoder @@ record, int @@ id|] |. Params.positional);
+  let errorMsg = "ERROR: updateOneById failed";
   getOneById(baseQuery, table, decoder, id, db)
+  |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
   |. Future.flatMapOk(_ => mutate("updateOneById", sql, params, db))
   |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };
@@ -150,8 +158,10 @@ let deactivateOneById = (baseQuery, table, decoder, id, db) => {
     WHERE $table.`id` = ?
   |j};
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let errorMsg = "ERROR: deactivateOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
+  |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
   |. Future.flatMapOk(_ => mutate("deactivateOneById", sql, params, db))
   |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };
@@ -163,8 +173,10 @@ let archiveOneById = (baseQuery, table, decoder, id, db) => {
     WHERE $table.`id` = ?
   |j};
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let errorMsg = "ERROR: archiveOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
+  |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
   |. Future.flatMapOk(_ => mutate("archiveOneById", sql, params, db))
   |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };
@@ -176,16 +188,18 @@ let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, db) => {
     SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
     WHERE 1=1 $where
   |j};
-  let normalizedParams = Params.positional(params);
+  let p = Params.positional(params);
   let errorMsg = "ERROR: archiveCompoundBy failed";
 
   checkEmptyUserQuery(errorMsg, userQuery)
   |. Future.value
-  |. Future.flatMapOk(x => getWhere(baseQuery, x, decoder, params, db))
-  |. Future.flatMapOk(x => assertArrayNotEmpty(errorMsg, x) |. Future.value)
-  |. Future.flatMapOk(x =>
-       mutate("archiveCompoundBy", sql, normalizedParams, db)
-       |. (_ => Belt.Result.Ok(x) |. Future.value)
+  |. Future.flatMapOk(uql =>
+       getWhere(baseQuery, uql, decoder, params, db)
+       |. Future.flatMapOk(x =>
+            assertArrayNotEmpty(errorMsg, x) |. Future.value
+          )
+       |. Future.flatMapOk(_ => mutate("archiveCompoundBy", sql, p, db))
+       |. Future.flatMapOk(_ => getWhere(baseQuery, uql, decoder, params, db))
      );
 };
 
@@ -200,10 +214,8 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, db) => {
 
   getOneById(baseQuery, table, decoder, id, db)
   |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
-  |. Future.flatMapOk(x =>
-       mutate("archiveCompoundOneById", sql, params, db)
-       |. (_ => Belt.Result.Ok(x) |. Future.value)
-     );
+  |. Future.flatMapOk(_ => mutate("archiveCompoundOneById", sql, params, db))
+  |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };
 
 let deleteBy = (baseQuery, userQuery, table, decoder, params, db) => {
