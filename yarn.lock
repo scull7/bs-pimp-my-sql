@@ -568,9 +568,9 @@ bs-sql-common@^1.0.2:
     "@glennsl/bs-json" "^2.0.0"
     sqlstring "^2.3.1"
 
-bs-sql-composer@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/bs-sql-composer/-/bs-sql-composer-2.0.0.tgz#dbbefb7bef782be3938dc8a5fcaa07e18e6ee79c"
+bs-sql-composer@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/bs-sql-composer/-/bs-sql-composer-3.2.0.tgz#755f15b6d392a1e8ea0c6f310b5ff9143909c273"
 
 bser@^2.0.0:
   version "2.0.0"

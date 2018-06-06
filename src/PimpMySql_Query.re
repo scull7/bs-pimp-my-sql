@@ -18,11 +18,13 @@ let assertHasItem = (msg, maybe) =>
   | None => Belt.Result.Error(PMSError.NotFound(msg))
   };
 
-let checkEmptyUserQuery = (msg, arr) =>
-  switch (arr) {
-  | [] => Belt.Result.Error(PMSError.EmptyUserQuery(msg))
-  | _ => Belt.Result.Ok(arr)
-  };
+let checkEmptyUserQuery = (msg, base, user) => {
+  let baseSql = Select.toSql(base);
+  let userSql = base |. user |. Select.toSql;
+
+  baseSql == userSql ?
+    Belt.Result.Error(PMSError.EmptyUserQuery(msg)) : Belt.Result.Ok(user);
+};
 
 let debug = Debug.make("bs-pimp-my-sql", "PimpMySql_Query");
 
@@ -63,7 +65,7 @@ let getOneById = (baseQuery, table, decoder, id, db) =>
   queryOne(
     "getOneById",
     decoder,
-    Select.(baseQuery |. where({j|AND $table.`id` = ?|j}) |. to_sql),
+    Select.(baseQuery |. where({j|AND $table.id = ?|j}) |. toSql),
     Json.Encode.([|int @@ id|]) |. Params.positional,
     db,
   );
@@ -87,7 +89,7 @@ let getOneBy = (baseQuery, decoder, params, db) =>
   queryOne(
     "getOneBy",
     decoder,
-    Select.to_sql(baseQuery),
+    Select.toSql(baseQuery),
     Params.positional(params),
     db,
   );
@@ -96,7 +98,7 @@ let get = (baseQuery, decoder, params, db) =>
   queryMany(
     "get",
     decoder,
-    Select.to_sql(baseQuery),
+    Select.toSql(baseQuery),
     Params.positional(params),
     db,
   );
@@ -105,10 +107,7 @@ let getWhere = (baseQuery, userQuery, decoder, params, db) =>
   queryMany(
     "getWhere",
     decoder,
-    Select.(
-      Belt.List.reduce(userQuery, baseQuery, (acc, x) => acc |. where(x))
-      |. to_sql
-    ),
+    userQuery(baseQuery) |. Select.toSql,
     Params.positional(params),
     db,
   );
@@ -152,11 +151,14 @@ let updateOneById = (baseQuery, table, decoder, encoder, record, id, db) => {
 };
 
 let deactivateOneById = (baseQuery, table, decoder, id, db) => {
-  let sql = {j|
-    UPDATE $table
-    SET $table.`active` = 0
-    WHERE $table.`id` = ?
-  |j};
+  let sql =
+    Update.(
+      make()
+      |. from(table)
+      |. set({j|$table.`active`|j}, "0")
+      |. where({j|AND $table.`id` = ?|j})
+      |. toSql
+    );
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
   let errorMsg = "ERROR: deactivateOneById failed";
 
@@ -167,11 +169,14 @@ let deactivateOneById = (baseQuery, table, decoder, id, db) => {
 };
 
 let archiveOneById = (baseQuery, table, decoder, id, db) => {
-  let sql = {j|
-    UPDATE $table
-    SET $table.`deleted` = UNIX_TIMESTAMP()
-    WHERE $table.`id` = ?
-  |j};
+  let sql =
+    Update.(
+      make()
+      |. from(table)
+      |. set({j|$table.`deleted`|j}, "1")
+      |. where({j|AND $table.`id` = ?|j})
+      |. toSql
+    );
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
   let errorMsg = "ERROR: archiveOneById failed";
 
@@ -182,33 +187,35 @@ let archiveOneById = (baseQuery, table, decoder, id, db) => {
 };
 
 let archiveCompoundBy = (baseQuery, userQuery, table, decoder, params, db) => {
-  let where = String.concat(" ", userQuery);
-  let sql = {j|
-    UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
-    WHERE 1=1 $where
-  |j};
+  let userSelect = userQuery(baseQuery);
+  let sql =
+    Conversion.updateFromSelect(userSelect)
+    |. Update.set({j|$table.`deleted`|j}, "1")
+    |. Update.set({j|$table.`deleted_timestamp`|j}, "UNIX_TIMESTAMP()")
+    |. Update.toSql;
   let p = Params.positional(params);
   let errorMsg = "ERROR: archiveCompoundBy failed";
 
-  checkEmptyUserQuery(errorMsg, userQuery)
+  checkEmptyUserQuery(errorMsg, baseQuery, userQuery)
   |. Future.value
-  |. Future.flatMapOk(uql =>
-       getWhere(baseQuery, uql, decoder, params, db)
-       |. Future.flatMapOk(x =>
-            assertArrayNotEmpty(errorMsg, x) |. Future.value
-          )
-       |. Future.flatMapOk(_ => mutate("archiveCompoundBy", sql, p, db))
-       |. Future.flatMapOk(_ => getWhere(baseQuery, uql, decoder, params, db))
+  |. Future.flatMapOk(x => getWhere(baseQuery, x, decoder, params, db))
+  |. Future.flatMapOk(x => assertArrayNotEmpty(errorMsg, x) |. Future.value)
+  |. Future.flatMapOk(_ => mutate("archiveCompoundBy", sql, p, db))
+  |. Future.flatMapOk(_ =>
+       getWhere(baseQuery, userQuery, decoder, params, db)
      );
 };
 
 let archiveCompoundOneById = (baseQuery, table, decoder, id, db) => {
-  let sql = {j|
-    UPDATE $table
-    SET $table.`deleted` = 1, $table.`deleted_timestamp` = UNIX_TIMESTAMP()
-    WHERE $table.`id` = ?
-  |j};
+  let sql =
+    Update.(
+      make()
+      |. from(table)
+      |. set({j|$table.`deleted`|j}, "1")
+      |. set({j|$table.`deleted_timestamp`|j}, "UNIX_TIMESTAMP()")
+      |. where({j|AND $table.`id` = ?|j})
+      |. toSql
+    );
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
   let errorMsg = "ERROR: archiveCompoundOneById failed";
 
@@ -218,16 +225,13 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, db) => {
   |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };
 
-let deleteBy = (baseQuery, userQuery, table, decoder, params, db) => {
-  let where = String.concat(" ", userQuery);
-  let sql = {j|
-    DELETE FROM $table
-    WHERE 1=1 $where
-  |j};
+let deleteBy = (baseQuery, userQuery, decoder, params, db) => {
+  let sql =
+    Conversion.deleteFromSelect(baseQuery |> userQuery) |. Delete.toSql;
   let normalizedParams = Params.positional(params);
   let errorMsg = "ERROR: deleteBy failed";
 
-  checkEmptyUserQuery(errorMsg, userQuery)
+  checkEmptyUserQuery(errorMsg, baseQuery, userQuery)
   |. Future.value
   |. Future.flatMapOk(x => getWhere(baseQuery, x, decoder, params, db))
   |. Future.flatMapOk(x => assertArrayNotEmpty(errorMsg, x) |. Future.value)
@@ -237,10 +241,10 @@ let deleteBy = (baseQuery, userQuery, table, decoder, params, db) => {
 };
 
 let deleteOneById = (baseQuery, table, decoder, id, db) => {
-  let sql = {j|
-    DELETE FROM $table
-    WHERE $table.`id` = ?
-  |j};
+  let sql =
+    Delete.(
+      make() |. from(table) |. where({j|AND $table.`id` = ?|j}) |. toSql
+    );
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
   let errorMsg = "ERROR: deleteOneById failed";
   log("deleteOneById", sql, params);

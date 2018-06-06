@@ -1,8 +1,14 @@
+open Jest;
+
+let table = "animal";
+
+describe("Fake Test", () =>
+  test("fake test", () =>
+    pass
+  )
+);
+
 /*
- open Jest;
-
- let table = "animal";
-
  describe("PimpMySql_FactorySql", () => {
    test("make (merging all clauses from base and user)", () => {
      let base =

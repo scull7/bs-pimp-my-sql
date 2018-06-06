@@ -41,7 +41,7 @@
     "bs-platform": "^3.1.5",
     "bs-result": "^2.2.0",
     "bs-sql-common": "^1.0.2",
-    "bs-sql-composer": "^2.0.0",
+    "bs-sql-composer": "^3.2.0",
     "reason-future": "^2.2.1"
   },
   "devDependencies": {

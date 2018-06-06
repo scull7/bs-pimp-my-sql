@@ -73,9 +73,9 @@ let seedTable2 = {j|
   VALUES ('gayle'), ('patrick'), ('cody'), ('clinton');
 |j};
 
-let base = Select.(select |. field("*") |. from(table));
+let base = Select.(make() |. field("*") |. from(table));
 
-let base2 = Select.(select |. field("*") |. from(table2));
+let base2 = Select.(make() |. field("*") |. from(table2));
 
 let createTestData = conn => {
   Sql.mutate(conn, ~sql=createDb, _ => ());
@@ -195,7 +195,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("getWhere (returns 1 result)", finish => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("elephant")|]);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |. Future.mapOk(
@@ -206,7 +206,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("getWhere (does not return anything)", finish => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("groundhog")|]);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |. Future.mapOk(
@@ -217,7 +217,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("getWhere (fails and throws syntax error exception)", finish => {
-    let where = [{j|$table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.type_ ?|j});
     let params = Json.Encode.([|string("elephant")|]);
     PimpMySql_Query.getWhere(base, where, decoder, params, conn)
     |. Future.mapOk(_ => fail("not an expected result") |. finish)
@@ -477,7 +477,7 @@ describe("PimpMySql_Query", () => {
     |. ignore
   );
   testAsync("archiveCompoundBy (returns 1 result)", finish => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("catfish")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -501,7 +501,7 @@ describe("PimpMySql_Query", () => {
   });
   testAsync("archiveCompoundBy (succeeds but returns no result)", finish => {
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("lumpsucker")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -520,7 +520,7 @@ describe("PimpMySql_Query", () => {
   });
   testAsync(
     "archiveCompoundBy (fails and returns UnexpectedEmptyArray)", finish => {
-    let where = [{j|AND $table.`type_` = ?|j}];
+    let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("blahblahblah")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -539,7 +539,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("archiveCompoundBy (fails and returns EmptyUserQuery)", fin => {
-    let where = [];
+    let where = base => base;
     let params = Json.Encode.([|string("blahblahblah")|]);
     PimpMySql_Query.archiveCompoundBy(
       base,
@@ -584,9 +584,9 @@ describe("PimpMySql_Query", () => {
     |. ignore
   );
   testAsync("deleteBy (returns 2 result)", finish => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = b => b |. Select.where({j|AND $table2.`deleted` != ?|j});
     let params = Json.Encode.([|int(0)|]);
-    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    PimpMySql_Query.deleteBy(base2, where, decoder2, params, conn)
     |. Future.mapOk(
          fun
          | [|{id: 1, first_name: "gayle"}, {id: 2, first_name: "patrick"}|] =>
@@ -596,9 +596,9 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("deleteBy (fails and returns NotFound)", finish => {
-    let where = [{j|AND $table2.`deleted` != ?|j}];
+    let where = b => b |. Select.where({j|AND $table2.`deleted` != ?|j});
     let params = Json.Encode.([|int(0)|]);
-    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    PimpMySql_Query.deleteBy(base2, where, decoder2, params, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.UnexpectedEmptyArray(_)) =>
@@ -611,9 +611,9 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("deleteBy (fails and returns EmptyUserQuery)", finish => {
-    let where = [];
+    let where = base => base;
     let params = Json.Encode.([|int(0)|]);
-    PimpMySql_Query.deleteBy(base2, where, table2, decoder2, params, conn)
+    PimpMySql_Query.deleteBy(base2, where, decoder2, params, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.EmptyUserQuery(_)) =>

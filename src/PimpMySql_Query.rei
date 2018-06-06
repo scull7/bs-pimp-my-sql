@@ -45,7 +45,7 @@ let get:
 let getWhere:
   (
     SqlComposer.Select.t,
-    list(string),
+    SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
@@ -111,7 +111,7 @@ let archiveOneById:
 let archiveCompoundBy:
   (
     SqlComposer.Select.t,
-    list(string),
+    SqlComposer.Select.t => SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
     array(Js.Json.t),
@@ -132,8 +132,7 @@ let archiveCompoundOneById:
 let deleteBy:
   (
     SqlComposer.Select.t,
-    list(string),
-    string,
+    SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection

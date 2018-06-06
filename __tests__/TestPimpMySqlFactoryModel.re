@@ -1,6 +1,12 @@
-/*
- open Jest;
+open Jest;
 
+describe("Fake Test", () =>
+  test("fake test", () =>
+    pass
+  )
+);
+
+/*
  /* Types */
  type animal = {
    id: int,
