@@ -1,6 +1,6 @@
 {
   "name": "bs-pimp-my-sql",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "package-specs": {
     "module": "commonjs",
     "in-source": true
