@@ -21,7 +21,6 @@
     "@glennsl/bs-json",
     "bs-mysql2",
     "bs-node-debug",
-    "bs-result",
     "bs-sql-common",
     "bs-sql-composer",
     "reason-future"
