@@ -48,11 +48,32 @@ Of course you can always directly call the internal files, namespaced with `Pimp
 that is not recommended since these files are implementation details.
 
 ### Using the Factory Model.
+
+Below are the requirements necessary to use the FactoryModel. Each requirement is documented
+with examples below.  The requirements include: creating the connection, creating the config,
+and creating the model.
+
+#### Creating the Connection
+
 ```reason
 module Sql = SqlCommon.Make_sql(MySql2);
 
 let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ~database="example", ());
+```
 
+
+#### Creating the Config
+
+Creating the Config is quite simple, below is a brief explanation
+for each field in the Config:
+
+- t: the record type that will be mapped to
+- table: the name of the database table
+- decoder: a function to map the query response to t
+- base: the base query for the model, try to keep this as thin as possible
+  (i.e. minimal where clauses, etc.)
+
+```reason
 let table = "animal";
 
 type animal = {
@@ -79,20 +100,49 @@ module Config = {
       |> order_by(`Desc({j|$table.`id`|j}))
     );
 };
+```
 
+#### Creating the Model
+
+Creating the model is quite simple once the Config is setup:
+
+```reason
 module Model = PimpMySql.FactoryModel.Generator(Config);
+```
 
-Model.getById(1, conn)
+#### Usage Examples
+
+Below are a few examples on how to use the model, refer to the documentation
+below for the full list of functions/methods:
+
+```reason
+Model.getOneById(1, conn)
 |> Js.Promise.then_(res =>
      (
        switch (res) {
-       | Some(x) => <handle case for result>
-       | None => <handle case for no result>
+       | Some(x) => <handle case for successfully fetching a row>
+       | None => <handle case for failing to fetch a row>
+       }
+     )
+     |> Js.Promise.resolve
+   );
+
+Model.archiveOneById(1, conn)
+|> Js.Promise.then_(res =>
+     (
+       switch (res) {
+       | Result.Ok(Some(x)) => <handle case for successfully archiving a row and returning the result>
+       | Result.Ok(None) => <handle case for successfully archiving a row and returning no result>
+       | None => <handle case for failing to archive a row>
        }
      )
      |> Js.Promise.resolve
    );
 ```
+
+*Note: you will notice that some methods will return `Result.Ok(None)`, this means that the row(s)
+were altered successfully but when an attempt to fetch the same row(s) was made the operation failed;
+this is because the Model's base query filters out the row(s) after update.*
 
 ## What's missing?
 
@@ -108,7 +158,8 @@ Everything not checked...
   - [ ] UPDATE
     - [x] _(updateOneById)_ Basic wrapper using the `id` column - must fit `PrimaryId` interface
     - [ ] _(updateWhereParams)_ with the `ObjectHash` interface
-    - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
+    - [x] _(incrementOneById)_ increment an integer column using the `id` column - must fit the `Counter`
+          and `PrimaryId` interfaces
   - [x] DELETE
     - [x] _(deleteBy)_ using a custom where clause
     - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface
@@ -137,14 +188,15 @@ Everything not checked...
   - [x] Query interface
     - [ ] INSERT
       - [x] _(insertOne)_
-      - [ ] _(insertBatch)_
+      - [x] _(insertBatch)_
       - [ ] Pre-Create intercept
       - [ ] Post-Create intercept
     - [ ] UPDATE
       - [x] _(updateOneById)_ using the `id` column - must fit `PrimaryId` interface
+      - [x] _(incrementOneById)_ increment an integer column using the `id` column - must fit the `Counter`
+            and `PrimaryId` interfaces
       - [ ] Pre-Update intercept
       - [ ] Post-Update intercept
-      - [ ] _(increment)_ increment an integer column - must fit the `Counter` interface
     - [x] DELETE
       - [x] _(deleteBy)_ using a custom where clause
       - [x] _(deleteOneById)_ - must fit the `PrimaryId` interface

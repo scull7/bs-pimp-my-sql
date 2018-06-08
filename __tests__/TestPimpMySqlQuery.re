@@ -14,6 +14,7 @@ type animalInternal = {type_: string};
 type person = {
   id: int,
   first_name: string,
+  age: int,
   active: int,
   deleted: int,
 };
@@ -36,14 +37,14 @@ let table = "animals";
 
 let table2 = "people";
 
-let createDb = {j|CREATE DATABASE $db;|j};
+let createDb = {j|CREATE OR REPLACE DATABASE $db;|j};
 
 let useDB = {j|USE $db;|j};
 
-let dropDb = {j|DROP DATABASE $db;|j};
+let dropDb = {j|DROP DATABASE IF EXISTS $db;|j};
 
 let createTable = {j|
-  CREATE TABLE $table (
+  CREATE TABLE IF NOT EXISTS $table (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     type_ VARCHAR(120) NOT NULL,
     deleted TINYINT(1) NOT NULL DEFAULT 0,
@@ -54,11 +55,12 @@ let createTable = {j|
 |j};
 
 let createTable2 = {j|
-  CREATE TABLE $table2 (
+  CREATE TABLE IF NOT EXISTS $table2 (
     id MEDIUMINT NOT NULL AUTO_INCREMENT,
     first_name VARCHAR(120) NOT NULL,
+    age TINYINT(3) UNSIGNED NOT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
-    deleted int(10) UNSIGNED NOT NULL DEFAULT 0,
+    deleted INT(10) UNSIGNED NOT NULL DEFAULT 0,
     primary key (id)
   );
 |j};
@@ -69,8 +71,8 @@ let seedTable = {j|
 |j};
 
 let seedTable2 = {j|
-  INSERT INTO $table2 (first_name)
-  VALUES ('gayle'), ('patrick'), ('cody'), ('clinton');
+  INSERT INTO $table2 (first_name, age)
+  VALUES ('gayle', 28), ('patrick', 65), ('cody', 29), ('clinton', 27);
 |j};
 
 let base = Select.(make() |. field("*") |. from(table));
@@ -78,17 +80,25 @@ let base = Select.(make() |. field("*") |. from(table));
 let base2 = Select.(make() |. field("*") |. from(table2));
 
 let createTestData = conn => {
-  Sql.mutate(conn, ~sql=createDb, _ => ());
-  Sql.mutate(conn, ~sql=useDB, _ => ());
-  Sql.mutate(conn, ~sql=createTable, _ => ());
-  Sql.mutate(conn, ~sql=seedTable, _ => ());
-  Sql.mutate(conn, ~sql=createTable2, _ => ());
-  Sql.mutate(conn, ~sql=seedTable2, _ => ());
+  let mutate = (str, sql) => {
+    Js.log2("PimpMySqlQuery Test: ", str);
+    Sql.Promise.mutate(conn, ~sql, ());
+  };
+
+  mutate({j| create database - $db|j}, createDb)
+  |> Js.Promise.then_(_ => mutate({j|use database - $db|j}, useDB))
+  |> Js.Promise.then_(_ => mutate({j|create table - $table|j}, createTable))
+  |> Js.Promise.then_(_ => mutate({j|seed table - $table|j}, seedTable))
+  |> Js.Promise.then_(_ =>
+       mutate({j|create table - $table2|j}, createTable2)
+     )
+  |> Js.Promise.then_(_ => mutate({j|seed table - $table2|j}, seedTable2));
 };
 
 /* Model Factory */
-describe("PimpMySql_Query", () => {
-  createTestData(conn);
+Skip.describe("PimpMySql_Query", () => {
+  beforeAllPromise(() => createTestData(conn));
+
   let decoder = json =>
     Json.Decode.{
       id: field("id", int, json),
@@ -100,9 +110,11 @@ describe("PimpMySql_Query", () => {
     Json.Decode.{
       id: field("id", int, json),
       first_name: field("first_name", string, json),
+      age: field("age", int, json),
       active: field("active", int, json),
       deleted: field("deleted", int, json),
     };
+
   testAsync("getOneById (returns 1 result)", finish =>
     PimpMySql_Query.getOneById(base, table, decoder, 3, conn)
     |. Future.mapOk(
@@ -121,6 +133,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   /**
    * @TODO - bs-sql-common query_batch method needs to be implemented before
    *         this will work.
@@ -161,6 +174,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("getOneBy (does not return anything)", finish => {
     let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|]);
@@ -172,6 +186,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("get (returns 1 result)", finish => {
     let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("elephant")|]);
@@ -183,6 +198,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("get (does not return anything)", finish => {
     let sql = Select.(base |. where({j|AND $table.`type_` = ?|j}));
     let params = Json.Encode.([|string("groundhog")|]);
@@ -205,6 +221,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("getWhere (does not return anything)", finish => {
     let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("groundhog")|]);
@@ -216,6 +233,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("getWhere (fails and throws syntax error exception)", finish => {
     let where = base => base |. Select.where({j|AND $table.type_ ?|j});
     let params = Json.Encode.([|string("elephant")|]);
@@ -236,6 +254,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("insertOne (succeeds but returns no result)", finish => {
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let record = {type_: "turkey"};
@@ -352,6 +371,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("updateOneById (succeeds but returns no result)", finish => {
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let record = {type_: "chicken"};
@@ -414,6 +434,7 @@ describe("PimpMySql_Query", () => {
     |. Future.mapError(_ => pass |. finish)
     |. ignore;
   });
+
   testAsync("deactivateOneById (returns 1 result)", finish =>
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 2, conn)
     |. Future.mapOk(
@@ -424,6 +445,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   testAsync("deactivateOneById (succeeds but returns no result)", f => {
     let base2 = base2 |. Select.where({j|AND $table2.`active` = 1|j});
     PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 1, conn)
@@ -457,6 +479,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   testAsync("archiveOneById (succeeds but returns no result)", finish => {
     let base2 = base2 |. Select.where({j|AND $table2.`deleted` = 0|j});
     PimpMySql_Query.archiveOneById(base2, table2, decoder2, 1, conn)
@@ -476,6 +499,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   testAsync("archiveCompoundBy (returns 1 result)", finish => {
     let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
     let params = Json.Encode.([|string("catfish")|]);
@@ -499,6 +523,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("archiveCompoundBy (succeeds but returns no result)", finish => {
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
@@ -518,6 +543,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync(
     "archiveCompoundBy (fails and returns UnexpectedEmptyArray)", finish => {
     let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
@@ -567,6 +593,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   testAsync("archiveCompoundOneById (succeeds but returns no result)", f => {
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 3, conn)
@@ -583,6 +610,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore
   );
+
   testAsync("deleteBy (returns 2 result)", finish => {
     let where = b => b |. Select.where({j|AND $table2.`deleted` != ?|j});
     let params = Json.Encode.([|int(0)|]);
@@ -610,6 +638,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("deleteBy (fails and returns EmptyUserQuery)", finish => {
     let where = base => base;
     let params = Json.Encode.([|int(0)|]);
@@ -622,6 +651,7 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
+
   testAsync("deleteOneById (returns 1 result)", finish =>
     PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
     |. Future.map(
@@ -635,7 +665,7 @@ describe("PimpMySql_Query", () => {
            fail("not an expected result") |. finish
          | Belt.Result.Ok({id: 3, type_: "elephant", deleted: 1}) =>
            pass |. finish
-         | _ => fail("not an expected result") |. finish,
+         | x => logAndFailAsync("deleteOneById", x, finish),
        )
     |. ignore
   );
@@ -644,12 +674,70 @@ describe("PimpMySql_Query", () => {
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
-         | _ => fail("not an expected result") |. finish,
+         | x => logAndFailAsync("deleteOneById", x, finish),
        )
     |. ignore
   );
-  afterAll(() => {
-    Sql.mutate(conn, ~sql=dropDb, _ => ());
-    MySql2.close(conn);
+
+  testAsync("incrementOneById (returns 1 result)", finish =>
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 4, conn)
+    |. Future.map(
+         fun
+         | Belt.Result.Ok(
+             Some({
+               id: 4,
+               first_name: "clinton",
+               age: 28,
+               active: 1,
+               deleted: 0,
+             }),
+           ) =>
+           pass |. finish
+         | x => logAndFailAsync("incrementOneById", x, finish),
+       )
+    |. ignore
+  );
+
+  testAsync("incrementOneById (succeeds but returns no result)", finish => {
+    let b2 = base2 |. SqlComposer.Select.where({j|AND $table2.age = 29|j});
+    PimpMySql_Query.incrementOneById(b2, table2, decoder2, "age", 3, conn)
+    |. Future.map(
+         fun
+         | Belt.Result.Ok(_) => pass |. finish
+         | x => logAndFailAsync("incrementOneById", x, finish),
+       )
+    |. ignore;
   });
+
+  testAsync("incrementOneById (fails and returns NotFound)", finish =>
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 1, conn)
+    |. Future.map(
+         fun
+         | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
+         | x => logAndFailAsync("incrementOneById", x, finish),
+       )
+    |. ignore
+  );
+
+  testAsync("incrementOneById (fails and throws bad field error)", finish =>
+    PimpMySql_Query.incrementOneById(
+      base2,
+      table2,
+      decoder2,
+      "badcolumn",
+      3,
+      conn,
+    )
+    |. Future.map(
+         fun
+         | Belt.Result.Error(_) => pass |. finish
+         | x => logAndFailAsync("incrementOneById", x, finish),
+       )
+    |. ignore
+  );
+
+  afterAllPromise(() =>
+    Sql.Promise.mutate(conn, ~sql=dropDb, ())
+    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
+  );
 });

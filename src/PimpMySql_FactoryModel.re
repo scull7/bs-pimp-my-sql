@@ -7,6 +7,7 @@ module type Config = {
 
 module Generator = (Config: Config) => {
   let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
+
   let getOneById = id =>
     PimpMySql_Query.getOneById(sqlFactory, Config.table, Config.decoder, id);
   /**
@@ -38,6 +39,17 @@ module Generator = (Config: Config) => {
       Config.decoder,
       encoder,
       record,
+    );
+
+  let insertBatch = (name, encoder, loader, error, columns, rows) =>
+    PimpMySql_Query.insertBatch(
+      ~name,
+      ~table=Config.table,
+      ~encoder,
+      ~loader,
+      ~error,
+      ~columns,
+      ~rows,
     );
 
   let updateOneById = (encoder, record, id) =>
@@ -91,6 +103,15 @@ module Generator = (Config: Config) => {
       sqlFactory,
       Config.table,
       Config.decoder,
+      id,
+    );
+
+  let incrementOneById = (field, id) =>
+    PimpMySql_Query.incrementOneById(
+      sqlFactory,
+      Config.table,
+      Config.decoder,
+      field,
       id,
     );
 };

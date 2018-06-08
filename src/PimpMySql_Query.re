@@ -247,10 +247,27 @@ let deleteOneById = (baseQuery, table, decoder, id, db) => {
     );
   let params = Json.Encode.([|int @@ id|]) |. Params.positional;
   let errorMsg = "ERROR: deleteOneById failed";
-  log("deleteOneById", sql, params);
+
   getOneById(baseQuery, table, decoder, id, db)
   |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
   |. Future.flatMapOk(x =>
        mutate("deleteOneById", sql, params, db) |. Future.mapOk(_ => x)
      );
+};
+
+let incrementOneById = (baseQuery, table, decoder, field, id, db) => {
+  let sql =
+    Update.(
+      make()
+      |. from(table)
+      |. set(field, {j|$field + 1|j})
+      |. where({j|AND $table.`id` = ?|j})
+      |. toSql
+    );
+  let params = Json.Encode.([|int @@ id|]) |> PimpMySql_Params.positional;
+  let errorMsg = "ERROR: incrementOneById failed";
+  getOneById(baseQuery, table, decoder, id, db)
+  |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
+  |. Future.flatMapOk(_ => mutate("incrementOneByid", sql, params, db))
+  |. Future.flatMapOk(_ => getOneById(baseQuery, table, decoder, id, db));
 };

@@ -2,7 +2,7 @@ open SqlComposer;
 type t = Select.t;
 
 /* Public */
-let make = (table, base) => Select.(base |. from({j| FROM $table |j}));
+let make = (table, base) => Select.(base |. from({j|`$table`|j}));
 
 let addField = (t, field) => Select.field(t, field);
 

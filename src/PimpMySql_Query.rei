@@ -1,3 +1,12 @@
+let mutate:
+  (
+    string,
+    string,
+    option([ | `Named(Js.Json.t) | `Positional(Js.Json.t)]),
+    SqlCommon.Make_sql(MySql2).connection
+  ) =>
+  Future.t(Belt.Result.t((int, int), exn));
+
 let getOneById:
   (
     SqlComposer.Select.t,
@@ -148,3 +157,14 @@ let deleteOneById:
     SqlCommon.Make_sql(MySql2).connection
   ) =>
   Future.t(Belt.Result.t('a, exn));
+
+let incrementOneById:
+  (
+    SqlComposer.Select.t,
+    string,
+    Js.Json.t => 'a,
+    string,
+    int,
+    SqlCommon.Make_sql(MySql2).connection
+  ) =>
+  Future.t(Belt.Result.t(option('a), exn));

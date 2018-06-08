@@ -49,6 +49,18 @@ module Generator:
       (Json.Encode.encoder('b), 'b, SqlCommon.Make_sql(MySql2).connection) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
+    let insertBatch:
+      (
+        string,
+        Json.Encode.encoder('a),
+        array('a) => Future.t(Belt.Result.t(array('b), exn)),
+        string => exn,
+        array(string),
+        array('a),
+        SqlCommon.Make_sql(MySql2).connection
+      ) =>
+      Future.t(Belt.Result.t(array('b), exn));
+
     let updateOneById:
       (
         Json.Encode.encoder('b),
@@ -89,4 +101,8 @@ module Generator:
     let deleteOneById:
       (int, SqlCommon.Make_sql(MySql2).connection) =>
       Future.t(Belt.Result.t(Config.t, exn));
+
+    let incrementOneById:
+      (string, int, SqlCommon.Make_sql(MySql2).connection) =>
+      Future.t(Belt.Result.t(option(Config.t), exn));
   };
