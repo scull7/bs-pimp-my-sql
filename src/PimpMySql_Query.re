@@ -26,7 +26,7 @@ let checkEmptyUserQuery = (msg, base, user) => {
     Belt.Result.Error(PMSError.EmptyUserQuery(msg)) : Belt.Result.Ok(user);
 };
 
-let debug = Debug.make("bs-pimp-my-sql", "PimpMySql_Query");
+let debug = Debug.make("bs-pimp-my-sql", "PimpMySql:Query");
 
 let jsonToString = [%raw "(x) => JSON.stringify(x)"];
 

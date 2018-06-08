@@ -1,5 +1,7 @@
 open Jest;
 
+exception InsertBatchFailed(string);
+
 [@bs.module "util"] external inspect : 'a => string = "";
 
 let logAndFailAsync = TestPimpMySqlQuery.logAndFailAsync;
@@ -90,9 +92,11 @@ let seedTable2 = {j|
 
 let base = SqlComposer.Select.(make() |. field("*") |. from(table));
 
+let debug = Debug.make("bs-pimp-my-sql", "TEST:PimpMySql:FactoryModel");
+
 let createTestData = conn => {
   let mutate = (str, sql) => {
-    Js.log2("PimpMySqlFactoryModel Test: ", str);
+    debug(str);
     Sql.Promise.mutate(conn, ~sql, ());
   };
 
@@ -210,6 +214,11 @@ module PersonModel2 = PimpMySql_FactoryModel.Generator(PersonConfig2);
 /* Tests */
 describe("PimpMySql_FactoryModel", () => {
   beforeAllPromise(() => createTestData(conn));
+
+  afterAllPromise(() =>
+    Sql.Promise.mutate(conn, ~sql=dropDb, ())
+    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
+  );
 
   testAsync("getOneById (returns a result)", finish =>
     AnimalModel.getOneById(1, conn)
@@ -358,7 +367,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
   testAsync("getWhere (fails and throws syntax error exception)", finish => {
     let userClauses = base =>
-      SqlComposer.Select.(base |. where({j|AND $table.type_ = ?|j}));
+      SqlComposer.Select.(base |. where({j|AND $table.type_ ?|j}));
     let params = Json.Encode.([|string("mouse")|]);
     AnimalModel.getWhere(userClauses, params, conn)
     |. shouldFail("getWhere", finish);
@@ -414,9 +423,10 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (returns 2 results)", finish => {
-    let encoder = x => Json.Encode.string @@ x.type_;
-    let loader = animals => Future.value(Belt.Result.Ok(animals));
-    let error = msg => msg |. inspect |. failwith;
+    let encoder = x =>
+      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let loader = animals => Belt.Result.Ok(animals) |. Future.value;
+    let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
     let rows = [|{type_: "catfish"}, {type_: "lumpsucker"}|];
     AnimalModel.insertBatch(
@@ -441,7 +451,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = x =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     let loader = animals => Future.value(Belt.Result.Ok(animals));
-    let error = msg => msg |. inspect |. failwith;
+    let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
     let rows = [|{type_: "dog"}, {type_: "cat"}|];
     AnimalModel.insertBatch(
@@ -459,7 +469,7 @@ describe("PimpMySql_FactoryModel", () => {
   testAsync("insertBatch (given empty array returns nothing)", finish => {
     let encoder = x => Json.Encode.string @@ x.type_;
     let loader = animals => Future.value(Belt.Result.Ok(animals));
-    let error = msg => msg |. inspect |. failwith;
+    let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
     let rows = [||];
     AnimalModel.insertBatch(
@@ -712,7 +722,13 @@ describe("PimpMySql_FactoryModel", () => {
 
   testAsync("incrementOneById (succeeds but returns no result)", finish =>
     PersonModel2.incrementOneById("age", 5, conn)
-    |. shouldFail("incrementOneById (succeeds but returns no result)", finish)
+    |. andThenTest(
+         "incrementOneById",
+         finish,
+         fun
+         | None => success
+         | x => toError(x),
+       )
   );
 
   testAsync("incrementOneById (fails and returns NotFound)", finish =>
@@ -726,10 +742,5 @@ describe("PimpMySql_FactoryModel", () => {
          "incrementOneById (fails and throw bad field error)",
          finish,
        )
-  );
-
-  afterAllPromise(() =>
-    Sql.Promise.mutate(conn, ~sql=dropDb, ())
-    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
   );
 });

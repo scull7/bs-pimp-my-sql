@@ -79,9 +79,11 @@ let base = Select.(make() |. field("*") |. from(table));
 
 let base2 = Select.(make() |. field("*") |. from(table2));
 
+let debug = Debug.make("bs-pimp-my-sql", "TEST:PimpMySql:Query");
+
 let createTestData = conn => {
   let mutate = (str, sql) => {
-    Js.log2("PimpMySqlQuery Test: ", str);
+    debug(str);
     Sql.Promise.mutate(conn, ~sql, ());
   };
 
@@ -96,8 +98,13 @@ let createTestData = conn => {
 };
 
 /* Model Factory */
-Skip.describe("PimpMySql_Query", () => {
+describe("PimpMySql_Query", () => {
   beforeAllPromise(() => createTestData(conn));
+
+  afterAllPromise(() =>
+    Sql.Promise.mutate(conn, ~sql=dropDb, ())
+    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
+  );
 
   let decoder = json =>
     Json.Decode.{
@@ -734,10 +741,5 @@ Skip.describe("PimpMySql_Query", () => {
          | x => logAndFailAsync("incrementOneById", x, finish),
        )
     |. ignore
-  );
-
-  afterAllPromise(() =>
-    Sql.Promise.mutate(conn, ~sql=dropDb, ())
-    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
   );
 });
