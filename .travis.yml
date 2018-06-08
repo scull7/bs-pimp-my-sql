@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - 6
 cache: yarn
-services:
-  - mysql
+addons:
+  mariadb: '10.3.7'
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
