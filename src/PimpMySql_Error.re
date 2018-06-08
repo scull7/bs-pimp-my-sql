@@ -1,3 +1,9 @@
+exception EmptyUserQuery(string);
+
+exception MutationFailure(string);
+
 exception NotFound(string);
 
-exception EmptyUserQuery(string);
+exception QueryFailure(string);
+
+exception UnexpectedEmptyArray(string);

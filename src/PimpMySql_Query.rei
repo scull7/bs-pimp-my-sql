@@ -1,3 +1,12 @@
+let mutate:
+  (
+    string,
+    string,
+    option([ | `Named(Js.Json.t) | `Positional(Js.Json.t)]),
+    SqlCommon.Make_sql(MySql2).connection
+  ) =>
+  Future.t(Belt.Result.t((int, int), exn));
+
 let getOneById:
   (
     SqlComposer.Select.t,
@@ -6,45 +15,51 @@ let getOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(option('a));
+  Future.t(Belt.Result.t(option('a), exn));
 
-let getByIdList:
-  (
-    SqlComposer.Select.t,
-    string,
-    Js.Json.t => 'a,
-    list(int),
-    SqlCommon.Make_sql(MySql2).connection
-  ) =>
-  Js.Promise.t(array('a));
+/**
+ * @TODO - bs-sql-common query_batch method needs to be implemented before
+ *         this will work.
+ */
+/*
+ let getByIdList:
+   (
+     SqlComposer.Select.t,
+     string,
+     Js.Json.t => 'a,
+     list(int),
+     SqlCommon.Make_sql(MySql2).connection
+   ) =>
+   Future.t(Belt.Result.t(array('a), exn));
+ */
 
 let getOneBy:
   (
     SqlComposer.Select.t,
     Js.Json.t => 'a,
-    Js.Json.t,
+    array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(option('a));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let get:
   (
     SqlComposer.Select.t,
     Js.Json.t => 'a,
-    Js.Json.t,
+    array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(array('a));
+  Future.t(Belt.Result.t(array('a), exn));
 
 let getWhere:
   (
     SqlComposer.Select.t,
-    list(string),
+    SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
-    Js.Json.t,
+    array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(array('a));
+  Future.t(Belt.Result.t(array('a), exn));
 
 let insertOne:
   (
@@ -55,20 +70,20 @@ let insertOne:
     'b,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(option('a));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let insertBatch:
   (
     ~name: string,
     ~table: string,
-    ~encoder: Json.Encode.encoder('a),
-    ~loader: array('a) => Js.Promise.t(array('b)),
-    ~error: string => 'c,
+    ~encoder: 'a => Js.Json.t,
+    ~loader: array('a) => Future.t(Belt.Result.t(array('b), exn)),
+    ~error: string => exn,
     ~columns: array(string),
     ~rows: array('a),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result('c, array('b)));
+  Future.t(Belt.Result.t(array('b), exn));
 
 let updateOneById:
   (
@@ -80,7 +95,7 @@ let updateOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, option('a)));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let deactivateOneById:
   (
@@ -90,7 +105,7 @@ let deactivateOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, option('a)));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let archiveOneById:
   (
@@ -100,18 +115,18 @@ let archiveOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, option('a)));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let archiveCompoundBy:
   (
     SqlComposer.Select.t,
-    list(string),
+    SqlComposer.Select.t => SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    Js.Json.t,
+    array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, array('a)));
+  Future.t(Belt.Result.t(array('a), exn));
 
 let archiveCompoundOneById:
   (
@@ -121,18 +136,17 @@ let archiveCompoundOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, option('a)));
+  Future.t(Belt.Result.t(option('a), exn));
 
 let deleteBy:
   (
     SqlComposer.Select.t,
-    list(string),
-    string,
+    SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
-    Js.Json.t,
+    array(Js.Json.t),
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, array('a)));
+  Future.t(Belt.Result.t(array('a), exn));
 
 let deleteOneById:
   (
@@ -142,7 +156,7 @@ let deleteOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, 'a));
+  Future.t(Belt.Result.t('a, exn));
 
 let incrementOneById:
   (
@@ -153,4 +167,4 @@ let incrementOneById:
     int,
     SqlCommon.Make_sql(MySql2).connection
   ) =>
-  Js.Promise.t(Result.result(exn, option('a)));
+  Future.t(Belt.Result.t(option('a), exn));

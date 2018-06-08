@@ -1,3 +1,4 @@
 let named = json => Some(`Named(json));
 
-let positional = json => Some(`Positional(json));
+let positional = arrayOfJson =>
+  Some(`Positional(Json.Encode.jsonArray(arrayOfJson)));

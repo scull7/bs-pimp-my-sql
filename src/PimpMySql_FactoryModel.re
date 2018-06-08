@@ -7,44 +7,41 @@ module type Config = {
 
 module Generator = (Config: Config) => {
   let sqlFactory = PimpMySql_FactorySql.make(Config.table, Config.base);
-  let getOneById = (id, conn) =>
-    PimpMySql_Query.getOneById(
-      sqlFactory(SqlComposer.Select.select),
-      Config.table,
-      Config.decoder,
-      id,
-      conn,
-    );
-  let getByIdList = (idList, conn) =>
-    PimpMySql_Query.getByIdList(
-      sqlFactory(SqlComposer.Select.select),
-      Config.table,
-      Config.decoder,
-      idList,
-      conn,
-    );
-  let getOneBy = (user, params, conn) =>
-    PimpMySql_Query.getOneBy(sqlFactory(user), Config.decoder, params, conn);
-  let get = (user, params, conn) =>
-    PimpMySql_Query.get(sqlFactory(user), Config.decoder, params, conn);
-  let getWhere = (user, params, conn) =>
-    PimpMySql_Query.getWhere(
-      sqlFactory(SqlComposer.Select.select),
-      user,
-      Config.decoder,
-      params,
-      conn,
-    );
-  let insertOne = (encoder, record, conn) =>
+
+  let getOneById = id =>
+    PimpMySql_Query.getOneById(sqlFactory, Config.table, Config.decoder, id);
+  /**
+    * @TODO - re-implement this when bs-sql-common supports batch
+    *         query operations.
+    */
+  /*
+   let getByIdList = idList =>
+     PimpMySql_Query.getByIdList( sqlFactory(SqlComposer.Select.select),
+       Config.table,
+       Config.decoder,
+       idList,
+     );
+   */
+
+  let getOneBy = (user, params) =>
+    PimpMySql_Query.getOneBy(user(sqlFactory), Config.decoder, params);
+
+  let get = (user, params) =>
+    PimpMySql_Query.get(user(sqlFactory), Config.decoder, params);
+
+  let getWhere = (user, params) =>
+    PimpMySql_Query.getWhere(sqlFactory, user, Config.decoder, params);
+
+  let insertOne = (encoder, record) =>
     PimpMySql_Query.insertOne(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       encoder,
       record,
-      conn,
     );
-  let insertBatch = (name, encoder, loader, error, columns, rows, conn) =>
+
+  let insertBatch = (name, encoder, loader, error, columns, rows) =>
     PimpMySql_Query.insertBatch(
       ~name,
       ~table=Config.table,
@@ -53,75 +50,68 @@ module Generator = (Config: Config) => {
       ~error,
       ~columns,
       ~rows,
-      conn,
     );
-  let updateOneById = (encoder, record, id, conn) =>
+
+  let updateOneById = (encoder, record, id) =>
     PimpMySql_Query.updateOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       encoder,
       record,
       id,
-      conn,
     );
-  let deactivateOneById = (id, conn) =>
+
+  let deactivateOneById = id =>
     PimpMySql_Query.deactivateOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       id,
-      conn,
     );
-  let archiveOneById = (id, conn) =>
+
+  let archiveOneById = id =>
     PimpMySql_Query.archiveOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       id,
-      conn,
     );
-  let archiveCompoundBy = (user, params, conn) =>
+
+  let archiveCompoundBy = (user, params) =>
     PimpMySql_Query.archiveCompoundBy(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       user,
       Config.table,
       Config.decoder,
       params,
-      conn,
     );
-  let archiveCompoundOneById = (id, conn) =>
+
+  let archiveCompoundOneById = id =>
     PimpMySql_Query.archiveCompoundOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       id,
-      conn,
     );
-  let deleteBy = (user, params, conn) =>
-    PimpMySql_Query.deleteBy(
-      sqlFactory(SqlComposer.Select.select),
-      user,
-      Config.table,
-      Config.decoder,
-      params,
-      conn,
-    );
-  let deleteOneById = (id, conn) =>
+
+  let deleteBy = (user, params) =>
+    PimpMySql_Query.deleteBy(sqlFactory, user, Config.decoder, params);
+
+  let deleteOneById = id =>
     PimpMySql_Query.deleteOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       id,
-      conn,
     );
-  let incrementOneById = (field, id, conn) =>
+
+  let incrementOneById = (field, id) =>
     PimpMySql_Query.incrementOneById(
-      sqlFactory(SqlComposer.Select.select),
+      sqlFactory,
       Config.table,
       Config.decoder,
       field,
       id,
-      conn,
     );
 };

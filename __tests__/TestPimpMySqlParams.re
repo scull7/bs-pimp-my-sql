@@ -13,7 +13,7 @@ describe("PimpMySql_Params", () => {
     }
   );
   test("positional", () =>
-    switch (PimpMySql_Params.positional @@ json) {
+    switch (PimpMySql_Params.positional @@ [|json|]) {
     | Some(`Positional(_)) => pass
     | _ => fail("not the expected return type")
     }
