@@ -52,11 +52,11 @@ let table = "animal_model";
 
 let table2 = "person_model";
 
-let createDb = {j|CREATE OR REPLACE DATABASE $db;|j};
+let createDb = {j|CREATE DATABASE $db;|j};
 
 let useDB = {j|USE $db;|j};
 
-let dropDb = {j|DROP DATABASE $db;|j};
+let dropDb = {j|DROP DATABASE IF EXISTS $db;|j};
 
 let createTable = {j|
    CREATE TABLE $table (
@@ -100,7 +100,8 @@ let createTestData = conn => {
     Sql.Promise.mutate(conn, ~sql, ());
   };
 
-  mutate({j| create database - $db|j}, createDb)
+  mutate({j| drop database - $db|j}, dropDb)
+  |> Js.Promise.then_(_ => mutate({j| create database - $db|j}, createDb))
   |> Js.Promise.then_(_ => mutate({j|use database - $db|j}, useDB))
   |> Js.Promise.then_(_ => mutate({j|create table - $table|j}, createTable))
   |> Js.Promise.then_(_ => mutate({j|seed table - $table|j}, seedTable))
