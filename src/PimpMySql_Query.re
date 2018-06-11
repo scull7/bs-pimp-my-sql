@@ -53,10 +53,10 @@ let query = (name, sql, params, db) => {
 };
 
 let queryOne = (name, decoder, sql, params, db) =>
-  query(name, sql, params, db) |. Future.mapOk(Decode.oneRow(decoder));
+  query(name, sql, params, db) |. Future.flatMapOk(Decode.oneRow(decoder));
 
 let queryMany = (name, decoder, sql, params, db) =>
-  query(name, sql, params, db) |. Future.mapOk(Decode.rows(decoder));
+  query(name, sql, params, db) |. Future.flatMapOk(Decode.rows(decoder));
 
 /* Public */
 /* @TODO - make getByIdList batch large lists appropriately. */

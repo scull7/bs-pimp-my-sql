@@ -13,6 +13,11 @@
     "test": "yarn run clean; yarn run build; jest --coverage && yarn run coverage",
     "watch:jest": "jest --coverage --watchAll"
   },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/Util\\.*"
+    ]
+  },
   "lint-staged": {
     "*.{re,rei}": [
       "yarn format",

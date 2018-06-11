@@ -41,6 +41,15 @@ type person = {
   deleted: int,
 };
 
+type badDecoderInternal = {type_: string};
+
+type badDecoder = {
+  id: int,
+  type_: int,
+  deleted: int,
+  deleted_timestamp: int,
+};
+
 /* Database Creation and Connection */
 module Sql = SqlCommon.Make_sql(MySql2);
 
@@ -112,10 +121,31 @@ let createTestData = conn => {
 };
 
 /* Model Factory */
+module BadDecoderConfig = {
+  type t = badDecoder;
+  let table = table;
+  let decoder = json =>
+    Json.Decode.{
+      id: field("id", int, json),
+      type_: field("type_", int, json),
+      deleted: field("deleted", int, json),
+      deleted_timestamp: field("deleted_timestamp", int, json),
+    };
+  let base =
+    SqlComposer.Select.(
+      make()
+      |. field({j|$table.id|j})
+      |. field({j|$table.type_|j})
+      |. field({j|$table.deleted|j})
+      |. field({j|$table.deleted_timestamp|j})
+      |. orderBy(`Desc({j|$table.id|j}))
+    );
+};
+
 module AnimalConfig = {
   type t = animal;
   let table = table;
-  let decoder = json =>
+  let decoder = json : t =>
     Json.Decode.{
       id: field("id", int, json),
       type_: field("type_", string, json),
@@ -136,7 +166,7 @@ module AnimalConfig = {
 module AnimalConfig2 = {
   type t = animal;
   let table = table;
-  let decoder = json =>
+  let decoder = json : t =>
     Json.Decode.{
       id: field("id", int, json),
       type_: field("type_", string, json),
@@ -208,6 +238,8 @@ module AnimalModel = PimpMySql_FactoryModel.Generator(AnimalConfig);
 
 module AnimalModel2 = PimpMySql_FactoryModel.Generator(AnimalConfig2);
 
+module BadDecoder = PimpMySql_FactoryModel.Generator(BadDecoderConfig);
+
 module PersonModel = PimpMySql_FactoryModel.Generator(PersonConfig);
 
 module PersonModel2 = PimpMySql_FactoryModel.Generator(PersonConfig2);
@@ -240,6 +272,11 @@ describe("PimpMySql_FactoryModel", () => {
          | None => success
          | Some(x) => toError(x),
        )
+  );
+
+  testAsync("getOneById - bad decoder", finish =>
+    BadDecoder.getOneById(1, conn)
+    |. shouldFail("getOneById::badDecoder", finish)
   );
 
   /**
@@ -375,9 +412,9 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertOne (returns 1 result)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "monkey"};
+    let record: animalInternal = {type_: "monkey"};
     AnimalModel.insertOne(encoder, record, conn)
     |. andThenTest(
          "insertOne",
@@ -389,13 +426,13 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertOne (succeeds but returns no result)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [
         ("type_", Json.Encode.string @@ x.type_),
         ("deleted", Json.Encode.int @@ 1),
       ]
       |> Json.Encode.object_;
-    let record = {type_: "turkey"};
+    let record: animalInternal = {type_: "turkey"};
     AnimalModel2.insertOne(encoder, record, conn)
     |. andThenTest(
          "insertOne",
@@ -407,24 +444,37 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertOne (fails and throws unique constraint error)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "dog"};
+    let record: animalInternal = {type_: "dog"};
     AnimalModel.insertOne(encoder, record, conn)
     |. shouldFail("insertOne", finish);
   });
 
+  /*
+   testAsync("insertOne (bad decoder returns error)", finish => {
+     let encoder = (x: badDecoderInternal) =>
+       Json.Encode.(object_([
+         ("type_", Json.Encode.string @@ x.type_),
+         ("deleted", Json.Encode.int @@ 0),
+       ]));
+     let record: badDecoderInternal = { type_: "honey badger" };
+     BadDecoder.insertOne(encoder, record, conn)
+     |. shouldFail("BadDecoder::insertOne", finish);
+   });
+   */
+
   testAsync(
     "insertOne (does not return a result, throws bad field error)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "flamingo"};
+    let record: animalInternal = {type_: "flamingo"};
     AnimalModel.insertOne(encoder, record, conn)
     |. shouldFail("insertOne", finish);
   });
 
   testAsync("insertBatch (returns 2 results)", finish => {
-    let encoder = x =>
+    let encoder = (x: badDecoderInternal) =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     let loader = animals => Belt.Result.Ok(animals) |. Future.value;
     let error = msg => InsertBatchFailed(msg);
@@ -449,12 +499,12 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (fails and throws unique constraint error)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
     let loader = animals => Future.value(Belt.Result.Ok(animals));
     let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
-    let rows = [|{type_: "dog"}, {type_: "cat"}|];
+    let rows: array(animalInternal) = [|{type_: "dog"}, {type_: "cat"}|];
     AnimalModel.insertBatch(
       "insertBatch test",
       encoder,
@@ -468,7 +518,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (given empty array returns nothing)", finish => {
-    let encoder = x => Json.Encode.string @@ x.type_;
+    let encoder = (x: animalInternal) => Json.Encode.string @@ x.type_;
     let loader = animals => Future.value(Belt.Result.Ok(animals));
     let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
@@ -492,9 +542,9 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("updateOneById (returns 1 result)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "hippopotamus"};
+    let record: animalInternal = {type_: "hippopotamus"};
     AnimalModel.updateOneById(encoder, record, 1, conn)
     |. andThenTest(
          "insertBatch",
@@ -506,13 +556,13 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("updateOneById (succeeds but returns no result)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [
         ("type_", Json.Encode.string @@ x.type_),
         ("deleted", Json.Encode.int @@ 1),
       ]
       |> Json.Encode.object_;
-    let record = {type_: "chicken"};
+    let record: animalInternal = {type_: "chicken"};
     AnimalModel2.updateOneById(encoder, record, 1, conn)
     |. andThenTest(
          "insertBatch",
@@ -524,18 +574,18 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("updateOneById (fails and returns NotFound)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "hippopotamus"};
+    let record: animalInternal = {type_: "hippopotamus"};
     AnimalModel.updateOneById(encoder, record, 99, conn)
     |. shouldFail("updateOneById", finish);
   });
 
   testAsync(
     "updateOneById (does not return a result, throws bad field error)", finish => {
-    let encoder = x =>
+    let encoder = (x: animalInternal) =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
-    let record = {type_: "hippopotamus"};
+    let record: animalInternal = {type_: "hippopotamus"};
     AnimalModel.updateOneById(encoder, record, 1, conn)
     |. shouldFail("updateOneById", finish);
   });
