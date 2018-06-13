@@ -537,9 +537,9 @@ bs-platform@^3.1.5:
   version "3.1.5"
   resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-3.1.5.tgz#fb34ee4702bc9163848d5537096c4f31ebaeed40"
 
-bs-sql-common@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/bs-sql-common/-/bs-sql-common-1.0.2.tgz#cdb2638501735c6c00d9bb599146f06effdf5d18"
+bs-sql-common@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/bs-sql-common/-/bs-sql-common-2.1.0.tgz#ce5fda4ca217d03324fdc90e58169f71cfd7651e"
   dependencies:
     "@glennsl/bs-json" "^2.0.0"
     sqlstring "^2.3.1"
