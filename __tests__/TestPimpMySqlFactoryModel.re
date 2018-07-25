@@ -51,9 +51,10 @@ type badDecoder = {
 };
 
 /* Database Creation and Connection */
-module Sql = SqlCommon.Make_sql(MySql2);
+module Sql = SqlCommon.Make(MySql2);
 
-let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+let conn =
+  Sql.Connection.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqlfactorymodel";
 
@@ -106,7 +107,7 @@ let debug = Debug.make("bs-pimp-my-sql", "TEST:PimpMySql:FactoryModel");
 let createTestData = conn => {
   let mutate = (str, sql) => {
     debug(str);
-    Sql.Promise.mutate(conn, ~sql, ());
+    Sql.Promise.mutate(~db=conn, ~sql, ~params=?None);
   };
 
   mutate({j| drop database - $db|j}, dropDb)
@@ -244,17 +245,21 @@ module PersonModel = PimpMySql_FactoryModel.Generator(PersonConfig);
 
 module PersonModel2 = PimpMySql_FactoryModel.Generator(PersonConfig2);
 
+let idOfInt = int => int |. Json.Encode.int |. MySql2.Id.fromJson;
+
 /* Tests */
 describe("PimpMySql_FactoryModel", () => {
   beforeAllPromise(() => createTestData(conn));
 
   afterAllPromise(() =>
-    Sql.Promise.mutate(conn, ~sql=dropDb, ())
-    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
+    Sql.Promise.mutate(~db=conn, ~sql=dropDb, ~params=?None)
+    |> Js.Promise.then_(_ =>
+         MySql2.Connection.close(conn) |> Js.Promise.resolve
+       )
   );
 
   testAsync("getOneById (returns a result)", finish =>
-    AnimalModel.getOneById(1, conn)
+    AnimalModel.getOneById(1 |. idOfInt, conn)
     |. andThenTest(
          "getOneById",
          finish,
@@ -264,7 +269,7 @@ describe("PimpMySql_FactoryModel", () => {
        )
   );
   testAsync("getOneById (does not return a result)", finish =>
-    AnimalModel.getOneById(99, conn)
+    AnimalModel.getOneById(99 |. idOfInt, conn)
     |. andThenTest(
          "getOneById",
          finish,
@@ -275,7 +280,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("getOneById - bad decoder", finish =>
-    BadDecoder.getOneById(1, conn)
+    BadDecoder.getOneById(1 |. idOfInt, conn)
     |. shouldFail("getOneById::badDecoder", finish)
   );
 
@@ -474,8 +479,9 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (returns 2 results)", finish => {
-    let encoder = (x: badDecoderInternal) =>
-      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let encoder = (x: badDecoderInternal) => [|
+      Json.Encode.string @@ x.type_,
+    |];
     let loader = animals => Belt.Result.Ok(animals) |. Future.value;
     let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
@@ -499,8 +505,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (fails and throws unique constraint error)", finish => {
-    let encoder = (x: animalInternal) =>
-      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let encoder = (x: animalInternal) => [|Json.Encode.string @@ x.type_|];
     let loader = animals => Future.value(Belt.Result.Ok(animals));
     let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
@@ -518,7 +523,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("insertBatch (given empty array returns nothing)", finish => {
-    let encoder = (x: animalInternal) => Json.Encode.string @@ x.type_;
+    let encoder = (x: animalInternal) => [|Json.Encode.string @@ x.type_|];
     let loader = animals => Future.value(Belt.Result.Ok(animals));
     let error = msg => InsertBatchFailed(msg);
     let columns = [|"type_"|];
@@ -545,7 +550,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record: animalInternal = {type_: "hippopotamus"};
-    AnimalModel.updateOneById(encoder, record, 1, conn)
+    AnimalModel.updateOneById(encoder, record, 1 |. idOfInt, conn)
     |. andThenTest(
          "insertBatch",
          finish,
@@ -563,7 +568,7 @@ describe("PimpMySql_FactoryModel", () => {
       ]
       |> Json.Encode.object_;
     let record: animalInternal = {type_: "chicken"};
-    AnimalModel2.updateOneById(encoder, record, 1, conn)
+    AnimalModel2.updateOneById(encoder, record, 1 |. idOfInt, conn)
     |. andThenTest(
          "insertBatch",
          finish,
@@ -577,7 +582,7 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = (x: animalInternal) =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record: animalInternal = {type_: "hippopotamus"};
-    AnimalModel.updateOneById(encoder, record, 99, conn)
+    AnimalModel.updateOneById(encoder, record, 99 |. idOfInt, conn)
     |. shouldFail("updateOneById", finish);
   });
 
@@ -586,12 +591,12 @@ describe("PimpMySql_FactoryModel", () => {
     let encoder = (x: animalInternal) =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
     let record: animalInternal = {type_: "hippopotamus"};
-    AnimalModel.updateOneById(encoder, record, 1, conn)
+    AnimalModel.updateOneById(encoder, record, 1 |. idOfInt, conn)
     |. shouldFail("updateOneById", finish);
   });
 
   testAsync("deactivateOneById (returns 1 result)", finish =>
-    PersonModel.deactivateOneById(2, conn)
+    PersonModel.deactivateOneById(2 |. idOfInt, conn)
     |. andThenTest(
          "deactivateOneById",
          finish,
@@ -602,7 +607,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("deactivateOneById (succeeds but returns no result)", finish =>
-    PersonModel2.deactivateOneById(1, conn)
+    PersonModel2.deactivateOneById(1 |. idOfInt, conn)
     |. andThenTest(
          "deactivateOneById",
          finish,
@@ -613,12 +618,12 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("deactivateOneById (fails and returns NotFound)", finish =>
-    PersonModel.deactivateOneById(99, conn)
+    PersonModel.deactivateOneById(99 |. idOfInt, conn)
     |. shouldFail("deactivateOneById", finish)
   );
 
   testAsync("archiveOneById (returns 1 result)", finish =>
-    PersonModel.archiveOneById(2, conn)
+    PersonModel.archiveOneById(2 |. idOfInt, conn)
     |. andThenTest(
          "archiveOneById",
          finish,
@@ -629,7 +634,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("archiveOneById (succeeds but returns no result)", finish =>
-    PersonModel2.archiveOneById(3, conn)
+    PersonModel2.archiveOneById(3 |. idOfInt, conn)
     |. andThenTest(
          "archiveOneById",
          finish,
@@ -640,7 +645,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("archiveOneById (fails and returns NotFound)", finish =>
-    PersonModel.archiveOneById(99, conn)
+    PersonModel.archiveOneById(99 |. idOfInt, conn)
     |. shouldFail("archiveOneById", finish)
   );
 
@@ -688,7 +693,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("archiveCompoundOneById (returns 1 result)", finish =>
-    AnimalModel.archiveCompoundOneById(2, conn)
+    AnimalModel.archiveCompoundOneById(2 |. idOfInt, conn)
     |. andThenTest(
          "archiveCompoundOneById",
          finish,
@@ -699,7 +704,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("archiveCompoundOneById (succeeds but returns no result)", finish =>
-    AnimalModel2.archiveCompoundOneById(3, conn)
+    AnimalModel2.archiveCompoundOneById(3 |. idOfInt, conn)
     |. andThenTest(
          "archiveCompoundOneById",
          finish,
@@ -710,7 +715,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("archiveCompoundOneById (fails and returns NotFound)", finish =>
-    AnimalModel.archiveCompoundOneById(99, conn)
+    AnimalModel.archiveCompoundOneById(99 |. idOfInt, conn)
     |. shouldFail("archiveCompoundOneById", finish)
   );
 
@@ -740,7 +745,7 @@ describe("PimpMySql_FactoryModel", () => {
   });
 
   testAsync("deleteOneById (returns 1 result)", finish =>
-    AnimalModel.deleteOneById(3, conn)
+    AnimalModel.deleteOneById(3 |. idOfInt, conn)
     |. andThenTest(
          "deleteOneById",
          finish,
@@ -751,11 +756,12 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("deleteOneById (fails and returns NotFound)", finish =>
-    AnimalModel.deleteOneById(3, conn) |. shouldFail("deleteOneById", finish)
+    AnimalModel.deleteOneById(3 |. idOfInt, conn)
+    |. shouldFail("deleteOneById", finish)
   );
 
   testAsync("incrementOneById (returns 1 result)", finish =>
-    PersonModel.incrementOneById("age", 4, conn)
+    PersonModel.incrementOneById("age", 4 |. idOfInt, conn)
     |. andThenTest(
          "incrementOneById (returns 1 result)",
          finish,
@@ -772,7 +778,7 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("incrementOneById (succeeds but returns no result)", finish =>
-    PersonModel2.incrementOneById("age", 5, conn)
+    PersonModel2.incrementOneById("age", 5 |. idOfInt, conn)
     |. andThenTest(
          "incrementOneById",
          finish,
@@ -783,12 +789,12 @@ describe("PimpMySql_FactoryModel", () => {
   );
 
   testAsync("incrementOneById (fails and returns NotFound)", finish =>
-    PersonModel.incrementOneById("age", 2, conn)
+    PersonModel.incrementOneById("age", 2 |. idOfInt, conn)
     |. shouldFail("incrementOneById (fails and returns NotFound)", finish)
   );
 
   testAsync("incrementOneById (fails and throws bad field error)", finish =>
-    PersonModel.incrementOneById("badcolumn", 6, conn)
+    PersonModel.incrementOneById("badcolumn", 6 |. idOfInt, conn)
     |. shouldFail(
          "incrementOneById (fails and throw bad field error)",
          finish,

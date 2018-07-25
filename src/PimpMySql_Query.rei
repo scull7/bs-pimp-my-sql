@@ -2,18 +2,18 @@ let mutate:
   (
     string,
     string,
-    option([ | `Named(Js.Json.t) | `Positional(Js.Json.t)]),
-    SqlCommon.Make_sql(MySql2).connection
+    option(SqlCommon.Make(MySql2).Params.t),
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
-  Future.t(Belt.Result.t((int, int), exn));
+  Future.t(Belt.Result.t((option(SqlCommon.Make(MySql2).Id.t), int), exn));
 
 let getOneById:
   (
     SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -28,7 +28,7 @@ let getOneById:
      string,
      Js.Json.t => 'a,
      list(int),
-     SqlCommon.Make_sql(MySql2).connection
+     SqlCommon.Make(MySql2).Connection.t
    ) =>
    Future.t(Belt.Result.t(array('a), exn));
  */
@@ -38,7 +38,7 @@ let getOneBy:
     SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -47,7 +47,7 @@ let get:
     SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(array('a), exn));
 
@@ -57,7 +57,7 @@ let getWhere:
     SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(array('a), exn));
 
@@ -68,7 +68,7 @@ let insertOne:
     Js.Json.t => 'a,
     Json.Encode.encoder('b),
     'b,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -76,12 +76,12 @@ let insertBatch:
   (
     ~name: string,
     ~table: string,
-    ~encoder: 'a => Js.Json.t,
+    ~encoder: 'a => array(Js.Json.t),
     ~loader: array('a) => Future.t(Belt.Result.t(array('b), exn)),
     ~error: string => exn,
     ~columns: array(string),
     ~rows: array('a),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(array('b), exn));
 
@@ -92,8 +92,8 @@ let updateOneById:
     Js.Json.t => 'a,
     Json.Encode.encoder('b),
     'b,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -102,8 +102,8 @@ let deactivateOneById:
     SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -112,8 +112,8 @@ let archiveOneById:
     SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -124,7 +124,7 @@ let archiveCompoundBy:
     string,
     Js.Json.t => 'a,
     array(Js.Json.t),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(array('a), exn));
 
@@ -133,8 +133,8 @@ let archiveCompoundOneById:
     SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));
 
@@ -144,7 +144,7 @@ let deleteBy:
     SqlComposer.Select.t => SqlComposer.Select.t,
     Js.Json.t => 'a,
     array(Js.Json.t),
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(array('a), exn));
 
@@ -153,8 +153,8 @@ let deleteOneById:
     SqlComposer.Select.t,
     string,
     Js.Json.t => 'a,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t('a, exn));
 
@@ -164,7 +164,7 @@ let incrementOneById:
     string,
     Js.Json.t => 'a,
     string,
-    int,
-    SqlCommon.Make_sql(MySql2).connection
+    SqlCommon.Make(MySql2).Id.t,
+    SqlCommon.Make(MySql2).Connection.t
   ) =>
   Future.t(Belt.Result.t(option('a), exn));

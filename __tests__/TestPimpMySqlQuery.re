@@ -27,9 +27,10 @@ let logAndFail = (label, x) => {
 let logAndFailAsync = (label, x, finish) => logAndFail(label, x) |. finish;
 
 /* Database Creation and Connection */
-module Sql = SqlCommon.Make_sql(MySql2);
+module Sql = SqlCommon.Make(MySql2);
 
-let conn = Sql.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
+let conn =
+  Sql.Connection.connect(~host="127.0.0.1", ~port=3306, ~user="root", ());
 
 let db = "pimpmysqlquery";
 
@@ -84,7 +85,7 @@ let debug = Debug.make("bs-pimp-my-sql", "TEST:PimpMySql:Query");
 let createTestData = conn => {
   let mutate = (str, sql) => {
     debug(str);
-    Sql.Promise.mutate(conn, ~sql, ());
+    Sql.Promise.mutate(~db=conn, ~sql, ~params=?None);
   };
 
   mutate({j| drop database - $db|j}, dropDb)
@@ -103,8 +104,10 @@ describe("PimpMySql_Query", () => {
   beforeAllPromise(() => createTestData(conn));
 
   afterAllPromise(() =>
-    Sql.Promise.mutate(conn, ~sql=dropDb, ())
-    |> Js.Promise.then_(_ => MySql2.close(conn) |> Js.Promise.resolve)
+    Sql.Promise.mutate(~db=conn, ~sql=dropDb, ~params=?None)
+    |> Js.Promise.then_(_ =>
+         MySql2.Connection.close(conn) |> Js.Promise.resolve
+       )
   );
 
   let decoder = json =>
@@ -123,24 +126,26 @@ describe("PimpMySql_Query", () => {
       deleted: field("deleted", int, json),
     };
 
-  testAsync("getOneById (returns 1 result)", finish =>
-    PimpMySql_Query.getOneById(base, table, decoder, 3, conn)
+  testAsync("getOneById (returns 1 result)", finish => {
+    let id = 3 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.getOneById(base, table, decoder, id, conn)
     |. Future.mapOk(
          fun
          | Some({id: 3, type_: "elephant"}) => pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore
-  );
-  testAsync("getOneById (does not return anything)", finish =>
-    PimpMySql_Query.getOneById(base, table, decoder, 4, conn)
+    |. ignore;
+  });
+  testAsync("getOneById (does not return anything)", finish => {
+    let id = 4 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.getOneById(base, table, decoder, id, conn)
     |. Future.mapOk(
          fun
          | Some(_) => fail("not an expected result") |. finish
          | None => pass |. finish,
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   /**
    * @TODO - bs-sql-common query_batch method needs to be implemented before
@@ -299,8 +304,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("insertBatch (returns 2 results)", finish => {
-    let encoder = x =>
-      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    let encoder = x => [|Json.Encode.string @@ x.type_|];
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
@@ -319,13 +323,11 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
-  testAsync("insertBatch (fails and throws unique constraint error)", f => {
-    let encoder = x =>
-      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+  testAsync("insertBatch (fails and throws unique constraint error)", f =>
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder,
+      ~encoder=x => [|Json.Encode.string @@ x.type_|],
       ~loader=animals => Future.value(Belt.Result.Ok(animals)),
       ~error=msg => PimpMySql_Error.MutationFailure(msg),
       ~columns=[|"type_"|],
@@ -337,15 +339,13 @@ describe("PimpMySql_Query", () => {
          | Belt.Result.Error(_) => pass |. f
          | Belt.Result.Ok(_) => fail("not an expected result") |. f,
        )
-    |. ignore;
-  });
-  testAsync("insertBatch (given empty array returns nothing)", finish => {
-    let encoder = x =>
-      [|Json.Encode.string @@ x.type_|] |> Json.Encode.jsonArray;
+    |. ignore
+  );
+  testAsync("insertBatch (given empty array returns nothing)", finish =>
     PimpMySql_Query.insertBatch(
       ~name="insertBatch test",
       ~table,
-      ~encoder,
+      ~encoder=x => [|Json.Encode.string @@ x.type_|],
       ~loader=animals => Future.value(Belt.Result.Ok(animals)),
       ~error=msg => PimpMySql_Error.MutationFailure(msg),
       ~columns=[|"type_"|],
@@ -357,9 +357,10 @@ describe("PimpMySql_Query", () => {
          | Belt.Result.Ok([||]) => pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore;
-  });
+    |. ignore
+  );
   testAsync("updateOneById (returns 1 result)", finish => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
     let record = {type_: "hamster"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -369,7 +370,7 @@ describe("PimpMySql_Query", () => {
       decoder,
       encoder,
       record,
-      1,
+      id,
       conn,
     )
     |. Future.map(
@@ -381,6 +382,7 @@ describe("PimpMySql_Query", () => {
   });
 
   testAsync("updateOneById (succeeds but returns no result)", finish => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
     let record = {type_: "chicken"};
     let encoder = x =>
@@ -395,7 +397,7 @@ describe("PimpMySql_Query", () => {
       decoder,
       encoder,
       record,
-      1,
+      id,
       conn,
     )
     |. Future.map(
@@ -406,6 +408,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("updateOneById (fails and returns NotFound)", finish => {
+    let id = 9 |. Json.Encode.int |. MySql2.Id.fromJson;
     let record = {type_: "goose"};
     let encoder = x =>
       [("type_", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -415,7 +418,7 @@ describe("PimpMySql_Query", () => {
       decoder,
       encoder,
       record,
-      9,
+      id,
       conn,
     )
     |. Future.map(
@@ -426,6 +429,7 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
   testAsync("updateOneById (fails and throws bad field error)", finish => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
     let record = {type_: "hippopotamus"};
     let encoder = x =>
       [("bad_column", Json.Encode.string @@ x.type_)] |> Json.Encode.object_;
@@ -435,7 +439,7 @@ describe("PimpMySql_Query", () => {
       decoder,
       encoder,
       record,
-      1,
+      id,
       conn,
     )
     |. Future.mapOk(_ => fail("not an expected result") |. finish)
@@ -443,20 +447,22 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
 
-  testAsync("deactivateOneById (returns 1 result)", finish =>
-    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 2, conn)
+  testAsync("deactivateOneById (returns 1 result)", finish => {
+    let id = 2 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, id, conn)
     |. Future.mapOk(
          fun
          | Some({id: 2, first_name: "patrick", active: 0, deleted: 0}) =>
            pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("deactivateOneById (succeeds but returns no result)", f => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
     let base2 = base2 |. Select.where({j|AND $table2.`active` = 1|j});
-    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 1, conn)
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, id, conn)
     |. Future.mapOk(
          fun
          | None => pass |. f
@@ -464,17 +470,19 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
-  testAsync("deactivateOneById (fails and returns NotFound)", finish =>
-    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, 99, conn)
+  testAsync("deactivateOneById (fails and returns NotFound)", finish => {
+    let id = 99 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.deactivateOneById(base2, table2, decoder2, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore
-  );
-  testAsync("archiveOneById (returns 1 result)", finish =>
-    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 2, conn)
+    |. ignore;
+  });
+  testAsync("archiveOneById (returns 1 result)", finish => {
+    let id = 2 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Ok(
@@ -485,12 +493,13 @@ describe("PimpMySql_Query", () => {
            pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("archiveOneById (succeeds but returns no result)", finish => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
     let base2 = base2 |. Select.where({j|AND $table2.`deleted` = 0|j});
-    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 1, conn)
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, id, conn)
     |. Future.mapOk(
          fun
          | None => pass |. finish
@@ -498,15 +507,16 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
-  testAsync("archiveOneById (fails and returns NotFound)", finish =>
-    PimpMySql_Query.archiveOneById(base2, table2, decoder2, 99, conn)
+  testAsync("archiveOneById (fails and returns NotFound)", finish => {
+    let id = 99 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.archiveOneById(base2, table2, decoder2, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
          | x => logAndFailAsync("archiveOneById", x, finish),
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("archiveCompoundBy (returns 1 result)", finish => {
     let where = base => base |. Select.where({j|AND $table.`type_` = ?|j});
@@ -590,8 +600,9 @@ describe("PimpMySql_Query", () => {
        )
     |. ignore;
   });
-  testAsync("archiveCompoundOneById (returns 1 result)", finish =>
-    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 2, conn)
+  testAsync("archiveCompoundOneById (returns 1 result)", finish => {
+    let id = 2 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, id, conn)
     |. Future.mapOk(
          fun
          | Some({id: 2, type_: "cat", deleted: 1, deleted_timestamp: 0} as x) =>
@@ -599,25 +610,27 @@ describe("PimpMySql_Query", () => {
          | Some({id: 2, type_: "cat", deleted: 1}) => pass |. finish
          | x => logAndFailAsync("archiveCompoundOneById - 2", x, finish),
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("archiveCompoundOneById (succeeds but returns no result)", f => {
+    let id = 3 |. Json.Encode.int |. MySql2.Id.fromJson;
     let base = base |. Select.where({j|AND $table.`deleted` = 0|j});
-    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 3, conn)
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, id, conn)
     |. Future.mapOk(_ => pass |. f)
     |. Future.mapError(_ => fail("not an expected result") |. f)
     |. ignore;
   });
-  testAsync("archiveCompoundOneById (fails and returns NotFound)", finish =>
-    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, 99, conn)
+  testAsync("archiveCompoundOneById (fails and returns NotFound)", finish => {
+    let id = 99 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.archiveCompoundOneById(base, table, decoder, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
          | _ => fail("not an expected result") |. finish,
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("deleteBy (returns 2 result)", finish => {
     let where = b => b |. Select.where({j|AND $table2.`deleted` != ?|j});
@@ -660,8 +673,9 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
 
-  testAsync("deleteOneById (returns 1 result)", finish =>
-    PimpMySql_Query.deleteOneById(base, table, decoder, 3, conn)
+  testAsync("deleteOneById (returns 1 result)", finish => {
+    let id = 3 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.deleteOneById(base, table, decoder, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Ok({
@@ -675,20 +689,22 @@ describe("PimpMySql_Query", () => {
            pass |. finish
          | x => logAndFailAsync("deleteOneById", x, finish),
        )
-    |. ignore
-  );
-  testAsync("deleteOneById (fails and returns NotFound)", finish =>
-    PimpMySql_Query.deleteOneById(base, table, decoder, 99, conn)
+    |. ignore;
+  });
+  testAsync("deleteOneById (fails and returns NotFound)", finish => {
+    let id = 99 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.deleteOneById(base, table, decoder, id, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
          | x => logAndFailAsync("deleteOneById", x, finish),
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
-  testAsync("incrementOneById (returns 1 result)", finish =>
-    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 4, conn)
+  testAsync("incrementOneById (returns 1 result)", finish => {
+    let id = 4 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", id, conn)
     |. Future.map(
          fun
          | Belt.Result.Ok(
@@ -703,12 +719,13 @@ describe("PimpMySql_Query", () => {
            pass |. finish
          | x => logAndFailAsync("incrementOneById", x, finish),
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("incrementOneById (succeeds but returns no result)", finish => {
+    let id = 3 |. Json.Encode.int |. MySql2.Id.fromJson;
     let b2 = base2 |. SqlComposer.Select.where({j|AND $table2.age = 29|j});
-    PimpMySql_Query.incrementOneById(b2, table2, decoder2, "age", 3, conn)
+    PimpMySql_Query.incrementOneById(b2, table2, decoder2, "age", id, conn)
     |. Future.map(
          fun
          | Belt.Result.Ok(_) => pass |. finish
@@ -717,15 +734,16 @@ describe("PimpMySql_Query", () => {
     |. ignore;
   });
 
-  testAsync("incrementOneById (fails and returns NotFound)", finish =>
-    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", 1, conn)
+  testAsync("incrementOneById (fails and returns NotFound)", finish => {
+    let id = 1 |. Json.Encode.int |. MySql2.Id.fromJson;
+    PimpMySql_Query.incrementOneById(base2, table2, decoder2, "age", id, conn)
     |. Future.map(
          fun
          | Belt.Result.Error(PimpMySql_Error.NotFound(_)) => pass |. finish
          | x => logAndFailAsync("incrementOneById", x, finish),
        )
-    |. ignore
-  );
+    |. ignore;
+  });
 
   testAsync("incrementOneById (fails and throws bad field error)", finish =>
     PimpMySql_Query.incrementOneById(
@@ -733,7 +751,7 @@ describe("PimpMySql_Query", () => {
       table2,
       decoder2,
       "badcolumn",
-      3,
+      3 |. Json.Encode.int |. MySql2.Id.fromJson,
       conn,
     )
     |. Future.map(
