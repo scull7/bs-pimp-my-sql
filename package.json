@@ -1,6 +1,6 @@
 {
   "name": "bs-pimp-my-sql",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "ReasonML rewrite of the Pimp'd out SQL wrapper",
   "scripts": {
     "build": "bsb -make-world",
