@@ -1,7 +1,7 @@
 open SqlComposer;
 
 /* Private */
-module Sql = SqlCommon.Make_sql(MySql2);
+module Sql = SqlCommon.Make(MySql2);
 module Params = PimpMySql_Params;
 module Decode = PimpMySql_Decode;
 module PMSError = PimpMySql_Error;
@@ -41,15 +41,27 @@ let log = (name, sql, params) => {
 let mutate = (name, sql, params, db) => {
   let errorHandler = e => Js.String.make(e) |. PMSError.MutationFailure;
   log(name, sql, params);
-  Sql.Promise.mutate(db, ~sql, ~params?, ())
-  |. FutureJs.fromPromise(errorHandler);
+  Sql.Promise.mutate(~db, ~sql, ~params?)
+  |. FutureJs.fromPromise(errorHandler)
+  |. Future.mapOk(mutation =>
+       (
+         mutation |. Sql.Response.Mutation.insertId,
+         mutation |. Sql.Response.Mutation.affectedRows,
+       )
+     );
 };
 
 let query = (name, sql, params, db) => {
   let errorHandler = e => Js.String.make(e) |. PMSError.QueryFailure;
   log(name, sql, params);
-  Sql.Promise.query(db, ~sql, ~params?, ())
-  |. FutureJs.fromPromise(errorHandler);
+  Sql.Promise.query(~db, ~sql, ~params?)
+  |. FutureJs.fromPromise(errorHandler)
+  |. Future.mapOk(select =>
+       (
+         select |. Sql.Response.Select.rows,
+         select |. Sql.Response.Select.meta,
+       )
+     );
 };
 
 let queryOne = (name, decoder, sql, params, db) =>
@@ -66,7 +78,7 @@ let getOneById = (baseQuery, table, decoder, id, db) =>
     "getOneById",
     decoder,
     Select.(baseQuery |. where({j|AND $table.id = ?|j}) |. toSql),
-    Json.Encode.([|int @@ id|]) |. Params.positional,
+    [|Sql.Id.toJson @@ id|] |. Params.positional,
     db,
   );
 
@@ -115,7 +127,10 @@ let getWhere = (baseQuery, userQuery, decoder, params, db) =>
 let insertOne = (baseQuery, table, decoder, encoder, record, db) => {
   let sql = {j|INSERT INTO $table SET ?|j};
   let params = [|encoder @@ record|] |. Params.positional;
-  let get = ((_, id)) => getOneById(baseQuery, table, decoder, id, db);
+  let get = ((id, _)) =>
+    id
+    |. Belt.Option.getExn
+    |. (id => getOneById(baseQuery, table, decoder, id, db));
 
   mutate("insertOne", sql, params, db) |. Future.flatMapOk(get);
 };
@@ -125,12 +140,14 @@ let insertBatch =
   switch (rows) {
   | [||] => Future.value(Belt.Result.Ok([||]))
   | _ =>
-    Sql.Promise.mutate_batch(
-      db,
+    Sql.Promise.Batch.mutate(
+      ~db,
       ~batch_size=?None,
       ~table,
-      ~columns=Belt_Array.map(columns, Json.Encode.string),
-      ~rows=Belt_Array.map(rows, encoder),
+      ~columns,
+      ~encoder,
+      ~rows,
+      (),
     )
     |. FutureJs.fromPromise(e => {
          let errorString = Js.String.make(e);
@@ -142,7 +159,7 @@ let insertBatch =
 let updateOneById = (baseQuery, table, decoder, encoder, record, id, db) => {
   let sql = {j|UPDATE $table SET ? WHERE $table.`id` = ?|j};
   let params =
-    Json.Encode.([|encoder @@ record, int @@ id|] |. Params.positional);
+    [|encoder @@ record, Sql.Id.toJson @@ id|] |. Params.positional;
   let errorMsg = "ERROR: updateOneById failed";
   getOneById(baseQuery, table, decoder, id, db)
   |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)
@@ -159,7 +176,7 @@ let deactivateOneById = (baseQuery, table, decoder, id, db) => {
       |. where({j|AND $table.`id` = ?|j})
       |. toSql
     );
-  let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let params = [|Sql.Id.toJson @@ id|] |. Params.positional;
   let errorMsg = "ERROR: deactivateOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
@@ -177,7 +194,7 @@ let archiveOneById = (baseQuery, table, decoder, id, db) => {
       |. where({j|AND $table.`id` = ?|j})
       |. toSql
     );
-  let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let params = [|Sql.Id.toJson @@ id|] |. Params.positional;
   let errorMsg = "ERROR: archiveOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
@@ -216,7 +233,7 @@ let archiveCompoundOneById = (baseQuery, table, decoder, id, db) => {
       |. where({j|AND $table.`id` = ?|j})
       |. toSql
     );
-  let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let params = [|Sql.Id.toJson @@ id|] |. Params.positional;
   let errorMsg = "ERROR: archiveCompoundOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
@@ -245,7 +262,7 @@ let deleteOneById = (baseQuery, table, decoder, id, db) => {
     Delete.(
       make() |. from(table) |. where({j|AND $table.`id` = ?|j}) |. toSql
     );
-  let params = Json.Encode.([|int @@ id|]) |. Params.positional;
+  let params = [|Sql.Id.toJson @@ id|] |. Params.positional;
   let errorMsg = "ERROR: deleteOneById failed";
 
   getOneById(baseQuery, table, decoder, id, db)
@@ -264,7 +281,7 @@ let incrementOneById = (baseQuery, table, decoder, field, id, db) => {
       |. where({j|AND $table.`id` = ?|j})
       |. toSql
     );
-  let params = Json.Encode.([|int @@ id|]) |> PimpMySql_Params.positional;
+  let params = [|Sql.Id.toJson @@ id|] |> PimpMySql_Params.positional;
   let errorMsg = "ERROR: incrementOneById failed";
   getOneById(baseQuery, table, decoder, id, db)
   |. Future.flatMapOk(x => assertHasItem(errorMsg, x) |. Future.value)

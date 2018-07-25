@@ -40,11 +40,11 @@
   "license": "MIT",
   "dependencies": {
     "@glennsl/bs-json": "^2.0.0",
-    "bs-mysql2": "^4.0.0",
+    "bs-mysql2": "^7.0.1",
     "bs-node-debug": "^0.2.0",
-    "bs-platform": "^3.1.5",
-    "bs-sql-common": "^2.1.0",
-    "bs-sql-composer": "^3.2.0",
+    "bs-platform": "^4.0.1",
+    "bs-sql-common": "^5.0.1",
+    "bs-sql-composer": "^3.2.1",
     "reason-future": "^2.2.1"
   },
   "devDependencies": {

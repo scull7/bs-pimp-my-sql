@@ -520,9 +520,9 @@ browser-resolve@^1.11.2:
   dependencies:
     resolve "1.1.7"
 
-bs-mysql2@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/bs-mysql2/-/bs-mysql2-4.0.0.tgz#8dacbe2474a75f5adb3e405b6c295b578f701e3f"
+bs-mysql2@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/bs-mysql2/-/bs-mysql2-7.0.1.tgz#414084cff103f13611e684e869ddd17d8d4b2391"
   dependencies:
     "@glennsl/bs-json" "^2.0.0"
     mysql2 "^1.5.3"
@@ -533,20 +533,20 @@ bs-node-debug@^0.2.0:
   dependencies:
     debug "^3.1.0"
 
-bs-platform@^3.1.5:
-  version "3.1.5"
-  resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-3.1.5.tgz#fb34ee4702bc9163848d5537096c4f31ebaeed40"
+bs-platform@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-4.0.1.tgz#544b58c2a53299cf406b57477e06389e4adab421"
 
-bs-sql-common@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/bs-sql-common/-/bs-sql-common-2.1.0.tgz#ce5fda4ca217d03324fdc90e58169f71cfd7651e"
+bs-sql-common@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/bs-sql-common/-/bs-sql-common-5.0.1.tgz#8766b58e1f94ac32708e35a499213de19ec0297a"
   dependencies:
     "@glennsl/bs-json" "^2.0.0"
     sqlstring "^2.3.1"
 
-bs-sql-composer@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/bs-sql-composer/-/bs-sql-composer-3.2.0.tgz#755f15b6d392a1e8ea0c6f310b5ff9143909c273"
+bs-sql-composer@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/bs-sql-composer/-/bs-sql-composer-3.2.1.tgz#ebeba25e1a33c34cbe29e8bf289937b767cfbe3d"
 
 bser@^2.0.0:
   version "2.0.0"

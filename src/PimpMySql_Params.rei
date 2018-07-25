@@ -1,3 +1,3 @@
-let named: Js.Json.t => MySql2.params;
+let named: Js.Json.t => option(MySql2.Params.t);
 
-let positional: array(Js.Json.t) => MySql2.params;
+let positional: array(Js.Json.t) => option(MySql2.Params.t);

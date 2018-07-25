@@ -9,7 +9,7 @@ module Generator:
   (Config: Config) =>
   {
     let getOneById:
-      (int, SqlCommon.Make_sql(MySql2).connection) =>
+      (SqlCommon.Make(MySql2).Id.t, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
     /**
       * @TODO - bs-sql-common query_batch method needs to be implemented before
@@ -17,7 +17,7 @@ module Generator:
       */
     /*
      let getByIdList:
-       (list(int), SqlCommon.Make_sql(MySql2).connection) =>
+       (list(int), SqlCommon.Make(MySql2).Connection.t) =>
        Future.t(Belt.Result.t(array(Config.t), exn));
      */
 
@@ -25,7 +25,7 @@ module Generator:
       (
         SqlComposer.Select.t => SqlComposer.Select.t,
         array(Js.Json.t),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
@@ -33,7 +33,7 @@ module Generator:
       (
         SqlComposer.Select.t => SqlComposer.Select.t,
         array(Js.Json.t),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(array(Config.t), exn));
 
@@ -41,23 +41,23 @@ module Generator:
       (
         SqlComposer.Select.t => SqlComposer.Select.t,
         array(Js.Json.t),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(array(Config.t), exn));
 
     let insertOne:
-      (Json.Encode.encoder('b), 'b, SqlCommon.Make_sql(MySql2).connection) =>
+      (Json.Encode.encoder('b), 'b, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
     let insertBatch:
       (
         string,
-        Json.Encode.encoder('a),
+        'a => array(Js.Json.t),
         array('a) => Future.t(Belt.Result.t(array('b), exn)),
         string => exn,
         array(string),
         array('a),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(array('b), exn));
 
@@ -65,44 +65,48 @@ module Generator:
       (
         Json.Encode.encoder('b),
         'b,
-        int,
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Id.t,
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
     let deactivateOneById:
-      (int, SqlCommon.Make_sql(MySql2).connection) =>
+      (SqlCommon.Make(MySql2).Id.t, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
     let archiveOneById:
-      (int, SqlCommon.Make_sql(MySql2).connection) =>
+      (SqlCommon.Make(MySql2).Id.t, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
     let archiveCompoundBy:
       (
         SqlComposer.Select.t => SqlComposer.Select.t,
         array(Js.Json.t),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(array(Config.t), exn));
 
     let archiveCompoundOneById:
-      (int, SqlCommon.Make_sql(MySql2).connection) =>
+      (SqlCommon.Make(MySql2).Id.t, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
 
     let deleteBy:
       (
         SqlComposer.Select.t => SqlComposer.Select.t,
         array(Js.Json.t),
-        SqlCommon.Make_sql(MySql2).connection
+        SqlCommon.Make(MySql2).Connection.t
       ) =>
       Future.t(Belt.Result.t(array(Config.t), exn));
 
     let deleteOneById:
-      (int, SqlCommon.Make_sql(MySql2).connection) =>
+      (SqlCommon.Make(MySql2).Id.t, SqlCommon.Make(MySql2).Connection.t) =>
       Future.t(Belt.Result.t(Config.t, exn));
 
     let incrementOneById:
-      (string, int, SqlCommon.Make_sql(MySql2).connection) =>
+      (
+        string,
+        SqlCommon.Make(MySql2).Id.t,
+        SqlCommon.Make(MySql2).Connection.t
+      ) =>
       Future.t(Belt.Result.t(option(Config.t), exn));
   };

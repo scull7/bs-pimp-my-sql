@@ -1,4 +1,4 @@
-let named = json => Some(`Named(json));
+let named = json => json |. MySql2.Params.named |. Some;
 
 let positional = arrayOfJson =>
-  Some(`Positional(Json.Encode.jsonArray(arrayOfJson)));
+  arrayOfJson |. Json.Encode.jsonArray |. MySql2.Params.positional |. Some;
